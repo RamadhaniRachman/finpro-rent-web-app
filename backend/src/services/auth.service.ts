@@ -1,7 +1,7 @@
-import prisma from '../utils/prisma';
-import { hashPassword, comparePassword } from '../utils/password';
-import { generateAccessToken, generateVerificationToken, generateResetToken, verifyToken } from '../utils/jwt';
-import { sendVerificationEmail, sendResetPasswordEmail } from './email.service';
+import prisma from '../utils/prisma.js';
+import { hashPassword, comparePassword } from '../utils/password.js';
+import { generateAccessToken, generateVerificationToken, generateResetToken, verifyToken } from '../utils/jwt.js';
+import { sendVerificationEmail, sendResetPasswordEmail } from './email.service.js';
 
 export const registerUser = async (name: string, email: string, role: 'USER' | 'TENANT') => {
   const existingUser = await prisma.users.findUnique({ where: { email } });
