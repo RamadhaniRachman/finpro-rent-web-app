@@ -3,17 +3,17 @@ import SearchWidget from './SearchWidget';
 
 const SLIDES = [
   {
-    url: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?q=80&w=2000&auto=format&fit=crop',
+    url: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440991/finpro/assets/waterfall_sanctuary.jpg',
     title: 'Escape into the Heart of Nature',
     sub: 'Discover sustainable stays that connect you with the outdoors.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=2000&auto=format&fit=crop',
+    url: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440989/finpro/assets/mossy_cabin.jpg',
     title: 'Sleep Under the Forest Canopy',
     sub: 'Handpicked eco-retreats designed for mindful travelers.',
   },
   {
-    url: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2000&auto=format&fit=crop',
+    url: 'https://res.cloudinary.com/dpxovlms4/image/upload/v1779440993/finpro/assets/mountain_lodge.jpg',
     title: 'Your Green Sanctuary Awaits',
     sub: 'Every stay plants a tree. Travel with purpose.',
   },

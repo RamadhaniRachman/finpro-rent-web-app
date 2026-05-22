@@ -82,6 +82,50 @@ Dalam kasus ini, Anda akan memasukkan `features2` ke dalam `features1`.
 
 ---
 
+## SKENARIO 3: Teman Anda Sudah Merge ke `dev` Lebih Dulu
+**Tujuan:** Partner Anda sudah menggabungkan kodenya ke `dev`, dan sekarang giliran Anda yang ingin menggabungkan kode Anda ke `dev`. 
+
+Untuk mencegah `dev` menjadi rusak/berantakan jika terjadi konflik, langkah paling aman adalah menarik kode dari `dev` ke branch Anda, perbaiki konflik di komputer Anda, baru kemudian didorong ke `dev`.
+
+### Langkah-langkah:
+1. **Simpan pekerjaan Anda di `features1`:**
+   ```bash
+   git add .
+   git commit -m "Save terakhir features1 sebelum merge dari dev"
+   ```
+2. **Ambil update terbaru `dev` dari server:**
+   ```bash
+   git checkout dev
+   git pull origin dev
+   ```
+3. **Gabungkan `dev` ke branch Anda (`features1`):**
+   ```bash
+   git checkout features1
+   git merge dev
+   ```
+4. **Cek dan Atasi Konflik (Bila Ada) ⚠️**
+   - Jika terminal berkata `CONFLICT`, buka VS Code.
+   - Periksa file yang berwarna merah (`both modified`).
+   - Pilih kode mana yang mau dipertahankan (Accept Current / Accept Incoming / Accept Both).
+   - Simpan file dan selesaikan dengan:
+     ```bash
+     git add .
+     git commit -m "Selesaikan konflik antara features1 dan dev"
+     ```
+5. **Gabungkan Semuanya ke `dev` Secara Resmi:**
+   Karena konflik sudah diselesaikan di branch Anda, proses ini dijamin mulus:
+   ```bash
+   git checkout dev
+   git merge features1
+   ```
+6. **Unggah Hasilnya ke Internet:**
+   ```bash
+   git push origin dev
+   ```
+Sekarang branch `dev` sudah berisi pekerjaan teman Anda DAN pekerjaan Anda dengan rapi!
+
+---
+
 ### Ringkasan Aturan:
 - **Jangan** langsung bekerja/mengubah kode di dalam branch `dev` atau `main`.
 - Selalu selesaikan pekerjaan di branch `features` masing-masing.

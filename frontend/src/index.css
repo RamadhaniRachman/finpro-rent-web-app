@@ -224,6 +224,166 @@ button { cursor: pointer; font-family: inherit; border: none; background: none; 
   border-bottom: 1px solid var(--surface-container-high);
 }
 
+/* ====== TOAST NOTIFICATION ====== */
+.toast-notification {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: var(--primary-container);
+  color: var(--on-primary);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 24px rgba(6, 27, 14, 0.25);
+  animation: slideDown 0.3s ease;
+  max-width: 90vw;
+  text-align: center;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ====== NAVBAR PROFILE DROPDOWN ====== */
+.navbar__profile-menu {
+  position: relative;
+}
+
+.navbar__profile-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  border: 2px solid var(--primary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar__profile-btn:hover { background: var(--primary-fixed); }
+
+.navbar__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--surface-container-lowest);
+  border: 1px solid var(--outline-variant);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(6, 27, 14, 0.15);
+  min-width: 220px;
+  z-index: 100;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navbar__dropdown-header {
+  padding: 12px 16px;
+  background: var(--surface-container-low);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.navbar__dropdown-name {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--on-surface);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar__dropdown-divider {
+  height: 1px;
+  background: var(--outline-variant);
+  margin: 4px 0;
+}
+
+.navbar__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-surface);
+  text-decoration: none;
+  transition: background 0.15s;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+.navbar__dropdown-item:hover { background: var(--surface-container-low); }
+
+.navbar__dropdown-item--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  position: relative;
+}
+.navbar__dropdown-item--disabled:hover { background: transparent; }
+
+.navbar__dropdown-item--logout {
+  color: #c0392b;
+}
+.navbar__dropdown-item--logout:hover { background: #fdf0f0; }
+
+/* ====== ROLE BADGE ====== */
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.role-badge--user {
+  background: var(--secondary-container);
+  color: var(--on-secondary-container);
+}
+.role-badge--tenant {
+  background: var(--primary-fixed);
+  color: var(--on-primary-fixed);
+}
+
+/* ====== DISABLED LABEL (badge kecil di sebelah item) ====== */
+.disabled-label {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  padding: 2px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+
+/* ====== NAVBAR CTA DISABLED ====== */
+.navbar__cta--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.navbar__cta--disabled:hover { opacity: 0.45; }
+
 /* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
