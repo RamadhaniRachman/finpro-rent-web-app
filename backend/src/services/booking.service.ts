@@ -119,8 +119,26 @@ export const createBookingProcess = async (
       check_in: checkIn,
       check_out: checkOut,
       total_price: totalPrice,
-      expires_at: addHours(new Date(), 2),
+      expires_at: addHours(new Date(), 1),
       status: "WAITING_FOR_PAYMENT",
+    },
+  });
+};
+
+export const getBookingDetails = async (id: string) => {
+  return await prisma.booking.findUnique({
+    where: { id },
+    // Jika nanti butuh join tabel, tambahkan include di sini
+    // include: { room_unit: { include: { room_type: true } } }
+  });
+};
+
+// Tambahkan di bawah fungsi getBookingDetails yang sudah ada
+export const cancelBookingById = async (id: string) => {
+  return await prisma.booking.update({
+    where: { id },
+    data: {
+      status: "CANCELED", // Pastikan "CANCELED" sesuai dengan penulisan Enum di skema Prisma kamu
     },
   });
 };
