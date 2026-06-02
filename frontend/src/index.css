@@ -2,37 +2,37 @@
 
 @theme {
   /* ── Brand Colors ─────────────────────────── */
-  --color-primary:                  #061b0e;
-  --color-on-primary:               #ffffff;
-  --color-primary-container:        #1b3022;
-  --color-on-primary-container:     #819986;
-  --color-primary-fixed:            #d0e9d4;
-  --color-primary-fixed-dim:        #b4cdb8;
-  --color-on-primary-fixed:         #0b2013;
+  --color-primary: #061b0e;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #1b3022;
+  --color-on-primary-container: #819986;
+  --color-primary-fixed: #d0e9d4;
+  --color-primary-fixed-dim: #b4cdb8;
+  --color-on-primary-fixed: #0b2013;
 
-  --color-secondary:                #56642b;
-  --color-on-secondary:             #ffffff;
-  --color-secondary-container:      #d6e7a1;
-  --color-on-secondary-container:   #5a682f;
+  --color-secondary: #56642b;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #d6e7a1;
+  --color-on-secondary-container: #5a682f;
 
   /* ── Surface Colors ───────────────────────── */
-  --color-surface:                  #f9faf8;
-  --color-surface-dim:              #d9dad8;
-  --color-surface-low:              #f3f4f2;
-  --color-surface-high:             #e7e8e6;
-  --color-surface-white:            #ffffff;
+  --color-surface: #f9faf8;
+  --color-surface-dim: #d9dad8;
+  --color-surface-low: #f3f4f2;
+  --color-surface-high: #e7e8e6;
+  --color-surface-white: #ffffff;
 
   /* ── Content Colors ───────────────────────── */
-  --color-on-surface:               #191c1b;
-  --color-on-surface-variant:       #434843;
+  --color-on-surface: #191c1b;
+  --color-on-surface-variant: #434843;
 
   /* ── Border Colors ────────────────────────── */
-  --color-outline:                  #737973;
-  --color-outline-variant:          #c3c8c1;
+  --color-outline: #737973;
+  --color-outline-variant: #c3c8c1;
 
   /* ── Typography ───────────────────────────── */
   --font-display: "Plus Jakarta Sans", sans-serif;
-  --font-body:    "Manrope", sans-serif;
+  --font-body: "Manrope", sans-serif;
 }
 
 /* Hide native browser password reveal icons (e.g. Edge) to prevent double toggles */
@@ -48,3 +48,21 @@
     right: 0;
   }
 }
+
+/* Custom Scrollbar untuk Table */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #c3c8c1;
+  border-radius: 10px;
+}
+<!-- Google Fonts & Material Symbols -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
