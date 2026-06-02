@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import api from "../api/axiosConfig";
-import OrderCard from "../components/booking/OrderCard";
-import Navbar from "../components/layout/Navbar";
+import api from "../../api/axiosConfig";
+import OrderCard from "../../components/booking/OrderCard";
+import Navbar from "../../components/layout/Navbar";
 import { useNavigate } from "react-router-dom";
+import OrderDetail from "./OrderDetail"; // Sesuaikan folder tempat kamu menyimpannya
 
 export default function OrderHistory() {
   const navigate = useNavigate();
@@ -67,13 +68,15 @@ export default function OrderHistory() {
 
   const handleCardAction = (orderId: string, status: string) => {
     if (status === "WAITING_FOR_PAYMENT") {
-      // Jika butuh bayar, arahkan ke halaman payment (Sesuaikan path URL-nya dengan route kamu)
+      // Jika butuh bayar, arahkan ke halaman payment
       navigate(`/payment/${orderId}`);
     } else {
-      // Jika status lain, arahkan ke halaman detail pesanan
-      navigate(`/checkout/${orderId}`);
+      // Jika status lain (Confirmed, Waiting Confirmation, Canceled),
+      // arahkan ke halaman detail pesanan
+      navigate(`/order/${orderId}`);
     }
   };
+
   return (
     <div className="bg-surface min-h-screen font-body text-on-surface pb-24 md:pb-0">
       <Navbar />

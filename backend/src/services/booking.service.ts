@@ -127,6 +127,17 @@ export const createBookingProcess = async (
 export const getBookingDetails = async (id: string) => {
   return await prisma.booking.findUnique({
     where: { id },
+    include: {
+      room_unit: {
+        include: {
+          room_type: {
+            include: {
+              property: true,
+            },
+          },
+        },
+      },
+    },
   });
 };
 
@@ -156,31 +167,27 @@ export const verifyBookingOwnership = async (
   return booking.user_id === userId;
 };
 
-export const getAllBookings = async (search?: string, date?: string) => {
-  const whereClause: any = {};
+// 1. Tambahkan parameter userId (bertipe string) di paling depan
+export const getAllBookings = async (
+  userId: string,
+  search?: string,
+  date?: string,
+) => {
+  // 2. KUNCI UTAMANYA DI SINI: Pastikan Prisma selalu memfilter berdasarkan user_id
+  const whereClause: any = {
+    user_id: userId,
+  };
 
-  // 1. Filter berdasarkan Nomor Order (ID) jika ada input teks
   if (search && search.trim() !== "") {
-    // Trik PostgreSQL: Gunakan Raw Query untuk me-casting UUID menjadi Text
     const matchingRecords = await prisma.$queryRaw<Array<{ id: string }>>`
       SELECT id FROM "booking" WHERE id::text ILIKE ${"%" + search + "%"}
     `;
-
-    // Ekstrak hasil pencarian menjadi array berisi ID saja
     const matchedIds = matchingRecords.map((record) => record.id);
-
-    // Masukkan array ID tersebut ke dalam Prisma menggunakan operator 'in'
-    whereClause.id = {
-      in: matchedIds,
-    };
+    whereClause.id = { in: matchedIds };
   }
 
-  // 2. Filter berdasarkan Tanggal jika user memilih tanggal tertentu
   if (date && date.trim() !== "") {
-    const targetDate = new Date(date); // Mengubah string "YYYY-MM-DD" menjadi objek Date
-
-    // Mencari pesanan yang tanggal check-in nya sama dengan tanggal pilihan user
-    // Atau jika ingin lebih fleksibel: mencari pesanan yang sedang aktif di tanggal tersebut
+    const targetDate = new Date(date);
     whereClause.check_in = {
       gte: new Date(targetDate.setHours(0, 0, 0, 0)),
       lte: new Date(targetDate.setHours(23, 59, 59, 999)),
@@ -189,16 +196,12 @@ export const getAllBookings = async (search?: string, date?: string) => {
 
   return await prisma.booking.findMany({
     where: whereClause,
-    orderBy: {
-      created_at: "desc",
-    },
+    orderBy: { created_at: "desc" },
     include: {
       room_unit: {
         include: {
           room_type: {
-            include: {
-              property: true, // 👈 Tambahkan ini untuk menarik data Properti
-            },
+            include: { property: true },
           },
         },
       },

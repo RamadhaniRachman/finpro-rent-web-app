@@ -1,7 +1,7 @@
 import { useState } from "react";
-import api from "../api/axiosConfig";
+import api from "../../api/axiosConfig";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import Navbar from "../components/layout/Navbar"; // 👈 Tambahkan import Navbar
+import Navbar from "../../components/layout/Navbar"; // 👈 Tambahkan import Navbar
 
 export default function Checkout() {
   const location = useLocation();
