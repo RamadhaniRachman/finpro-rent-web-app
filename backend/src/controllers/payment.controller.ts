@@ -1,5 +1,8 @@
 import type { Request, Response } from "express";
-import { processPaymentUpload } from "../services/payment.service.js";
+import {
+  processPaymentUpload,
+  verifyPaymentOwnership,
+} from "../services/payment.service.js";
 import { prisma } from "../utils/prisma.js";
 import { snap } from "../utils/midtrans.js";
 
@@ -8,13 +11,38 @@ export const uploadPaymentProof = async (
   res: Response,
 ): Promise<void> => {
   try {
+    // 1. Ambil ID User yang sedang login
+    const userId = req.user?.id;
     const { bookingId, amount, method } = req.body;
     const file = req.file;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized. Harap login." });
+      return;
+    }
 
     if (!file) {
       res.status(400).json({ error: "Bukti pembayaran wajib diunggah" });
       return;
     }
+
+    // ==========================================
+    // 🚨 PENGECEKAN OWNERSHIP (KEPEMILIKAN) 🚨
+    // ==========================================
+    try {
+      const isOwner = await verifyPaymentOwnership(bookingId, userId);
+      if (!isOwner) {
+        res.status(403).json({
+          error: "Forbidden. Akses ditolak karena ini bukan pesanan Anda.",
+        });
+        return;
+      }
+    } catch (error: any) {
+      // Akan menangkap error "Pesanan tidak ditemukan" dari service
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    // ==========================================
 
     const proofUrl = file.path;
 
@@ -35,13 +63,21 @@ export const uploadPaymentProof = async (
       .json({ error: error.message || "Terjadi kesalahan sistem" });
   }
 };
+
 // midtrans
 export const createSnapToken = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
+    // 1. Ambil ID User dari token JWT (Pastikan rute ini pakai middleware authenticate)
+    const userId = req.user?.id;
     const { orderId } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized. Harap login." });
+      return;
+    }
 
     const booking = await prisma.booking.findUnique({
       where: { id: orderId as string },

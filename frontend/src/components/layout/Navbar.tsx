@@ -29,6 +29,7 @@ export default function Navbar() {
     setToast(msg);
     setTimeout(() => setToast(null), 2500);
   };
+
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -46,11 +47,43 @@ export default function Navbar() {
     { name: "Favorites", path: "/favorites" },
   ];
 
+  // =========================================================
+  // LOGIC UNTUK CHECKOUT ISOLATION (NAVBAR MINIMALIS)
+  // =========================================================
+  const isCheckoutPhase =
+    location.pathname.startsWith("/checkout") ||
+    location.pathname.startsWith("/payment") ||
+    location.pathname.startsWith("/order");
+
+  if (isCheckoutPhase) {
+    return (
+      <>
+        {toast && <Toast msg={toast} />}
+        <header className="bg-surface/80 top-0 sticky backdrop-blur-md shadow-sm flex justify-between items-center w-full px-6 md:px-16 h-[72px] z-50 border-b border-outline-variant/30">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
+              className="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high transition-colors p-2 rounded-full border-none bg-transparent flex items-center justify-center"
+            >
+              arrow_back
+            </button>
+            <div className="font-display font-bold text-xl text-primary">
+              Finpro Escapes
+            </div>
+          </div>
+          {/* Sisi kanan dibiarkan kosong agar user fokus pada transaksi */}
+        </header>
+      </>
+    );
+  }
+  // =========================================================
+
   return (
     <>
       {toast && <Toast msg={toast} />}
 
-      <header className="sticky top-0 z-50 h-[72px] bg-surface/90 backdrop-blur-md border-b border-outline-variant shadow-[0_1px_3px_rgba(6,27,14,0.08)]">
+      <header className="sticky top-0 z-50 h-[72px] bg-surface/90 backdrop-blur-md border-b border-outline-variant shadow-[0_1px_3px_rgba(6,27,14,0.08)] w-full">
         <div className="flex items-center justify-between h-full max-w-[1280px] mx-auto px-5">
           {/* Bagian Kiri: Logo */}
           <Link
@@ -61,7 +94,6 @@ export default function Navbar() {
           </Link>
 
           {/* Bagian Tengah: Desktop Navigation */}
-          {/* Sembunyikan menu navigasi jika yang login adalah Tenant */}
           {!isTenant && (
             <nav className="hidden md:flex items-center gap-8">
               {navItems.map((item) => {
@@ -88,7 +120,6 @@ export default function Navbar() {
 
           {/* Bagian Kanan: Actions & Profile */}
           <div className="flex items-center gap-3">
-            {/* Ikon Notifikasi (Hanya muncul jika sudah login) */}
             {isLoggedIn && (
               <button
                 aria-label="Notifications"
@@ -102,7 +133,6 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* Ikon Profil / Login */}
             {!isLoggedIn ? (
               <Link
                 to="/login"
@@ -154,7 +184,6 @@ export default function Navbar() {
         {open && (
           <nav className="md:hidden bg-surface-white border-t border-outline-variant py-2 shadow-md">
             <div className="max-w-[1280px] mx-auto px-5 flex flex-col">
-              {/* Mobile Nav Links (Hanya untuk User/Guest) */}
               {!isTenant && (
                 <div className="py-2 border-b border-surface-high mb-2 flex flex-col gap-1">
                   {navItems.map((item) => {
@@ -180,12 +209,11 @@ export default function Navbar() {
                 </div>
               )}
 
-              {/* Mobile Profile Actions */}
               {isLoggedIn && (
                 <Link
                   to="/notifications"
                   onClick={() => setOpen(false)}
-                  className="block py-3 text-[15px] font-medium text-on-surface-variant flex items-center gap-2 border-b border-surface-high"
+                  className="block py-3 text-[15px] font-medium text-on-surface-variant flex items-center justify-between border-b border-surface-high"
                 >
                   <span>Notifications</span>
                   <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">

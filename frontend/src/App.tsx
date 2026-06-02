@@ -5,10 +5,10 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // ======== PAGES ========
-import LandingPage from "./pages/LandingPage";
-import Checkout from "./pages/Checkout";
-import Payment from "./pages/Payment";
-import OrderHistory from "./pages/OrderHistory";
+import LandingPage from "./pages/users/LandingPage";
+import Checkout from "./pages/users/Checkout";
+import Payment from "./pages/users/Payment";
+import OrderHistory from "./pages/users/OrderHistory";
 import LoginPage from "./pages/LoginPage";
 import RegisterUserPage from "./pages/RegisterUserPage";
 import RegisterTenantPage from "./pages/RegisterTenantPage";
@@ -17,6 +17,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TenantTransaction from "./pages/tenant/TransactionManagement";
 import TenantDashboardPage from "./pages/tenant/Dashboard";
+import OrderDetail from "./pages/users/OrderDetail";
+
 // ======== PLACEHOLDERS ========
 const UserProfilePage = () => (
   <div style={{ padding: "2rem", textAlign: "center" }}>
@@ -34,7 +36,6 @@ function App() {
         <Routes>
           {/* ======== RUTE PUBLIK ======== */}
           <Route path="/" element={<LandingPage />} />
-
           {/* ======== RUTE AUTH ======== */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterUserPage />} />
@@ -42,11 +43,11 @@ function App() {
           <Route path="/verify/:token" element={<VerifyPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
-
           {/* ======== RUTE TRANSAKSI & BOOKING ======== */}
           <Route path="/checkout/:id" element={<Checkout />} />
           <Route path="/payment/:id" element={<Payment />} />
           <Route path="/bookings" element={<OrderHistory />} />
+          <Route path="/order/:id" element={<OrderDetail />} />
 
           {/* ======== RUTE TERPROTEKSI: USER ======== */}
           <Route
@@ -57,7 +58,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           {/* ======== RUTE TERPROTEKSI: TENANT ======== */}
           <Route
             path="/tenant/dashboard"

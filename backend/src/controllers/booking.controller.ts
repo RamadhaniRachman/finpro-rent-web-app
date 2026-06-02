@@ -92,11 +92,19 @@ export const getBookings = async (
   try {
     const { search, date } = req.query;
 
+    // 1. Ambil ID user dari token JWT yang sudah diverifikasi middleware
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "Akses ditolak. Harap login." });
+      return;
+    }
+
     const searchQuery = typeof search === "string" ? search : undefined;
     const dateQuery = typeof date === "string" ? date : undefined;
 
-    // Meneruskan kedua query ke layer Service
-    const bookings = await getAllBookings(searchQuery, dateQuery);
+    // 2. Lempar userId ke dalam fungsi service
+    const bookings = await getAllBookings(userId, searchQuery, dateQuery);
 
     res.status(200).json({ data: bookings });
   } catch (error: any) {

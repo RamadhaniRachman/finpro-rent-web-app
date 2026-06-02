@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../api/axiosConfig"; // Sesuaikan path-nya
+import api from "../../api/axiosConfig"; // Sesuaikan path-nya
+import Navbar from "../../components/layout/Navbar";
 
 // Memberi tahu TypeScript bahwa window.snap itu ada (bawaan script Midtrans)
 declare global {
@@ -102,19 +103,7 @@ export default function Payment() {
   return (
     <div className="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased">
       {/* Header */}
-      <header className="bg-surface/80 docked full-width top-0 sticky backdrop-blur-md shadow-sm flex justify-between items-center w-full px-6 md:px-16 h-16 z-50 border-b border-outline-variant/30">
-        <div className="flex items-center gap-4">
-          <span
-            className="material-symbols-outlined text-primary cursor-pointer hover:bg-surface-container-high transition-colors p-2 rounded-full"
-            onClick={() => navigate(-1)}
-          >
-            arrow_back
-          </span>
-          <div className="font-headline-sm text-headline-sm font-semibold text-primary">
-            Finpro Escapes
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       <main className="flex-grow max-w-[1280px] mx-auto w-full px-6 md:px-16 py-8 md:py-12">
         <div className="mb-8">
