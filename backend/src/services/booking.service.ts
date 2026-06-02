@@ -36,7 +36,6 @@ const calculateNightlyPrice = (
 };
 
 // 3. Fungsi Utama: Proses pembuatan booking
-// PERUBAHAN: Parameter unitId dihapus
 export const createBookingProcess = async (
   userId: string,
   roomTypeId: string,
@@ -128,8 +127,6 @@ export const createBookingProcess = async (
 export const getBookingDetails = async (id: string) => {
   return await prisma.booking.findUnique({
     where: { id },
-    // Jika nanti butuh join tabel, tambahkan include di sini
-    // include: { room_unit: { include: { room_type: true } } }
   });
 };
 
@@ -165,7 +162,6 @@ export const getAllBookings = async (search?: string, date?: string) => {
   // 1. Filter berdasarkan Nomor Order (ID) jika ada input teks
   if (search && search.trim() !== "") {
     // Trik PostgreSQL: Gunakan Raw Query untuk me-casting UUID menjadi Text
-    // Catatan: Jika nama tabel di databasemu huruf kecil semua, ubah "Booking" menjadi "booking"
     const matchingRecords = await prisma.$queryRaw<Array<{ id: string }>>`
       SELECT id FROM "booking" WHERE id::text ILIKE ${"%" + search + "%"}
     `;

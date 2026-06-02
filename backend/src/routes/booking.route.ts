@@ -5,6 +5,7 @@ import {
   getBookingById,
   cancelBookingProcess,
 } from "../controllers/booking.controller.js";
+
 import {
   authenticate,
   authorizeRole,
@@ -18,6 +19,7 @@ router.post("/", authenticate, authorizeRole("USER"), createBooking);
 
 // GET /api/bookings
 router.get("/", authenticate, authorizeRole("USER"), getBookings);
+
 // GET /api/bookings/:id — Lihat detail booking milik sendiri
 router.get(
   "/:id",

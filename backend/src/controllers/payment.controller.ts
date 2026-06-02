@@ -109,7 +109,6 @@ export const handleMidtransNotification = async (
     console.log("👉 Mencari pesanan di database dengan ID:", realBookingId);
     console.log("👉 Status transaksi dari Midtrans:", transactionStatus);
 
-    // Pastikan pakai "any" supaya TypeScript tidak rewel
     let newStatus: any = "WAITING_FOR_PAYMENT";
 
     if (transactionStatus === "capture" || transactionStatus === "settlement") {
