@@ -7,11 +7,7 @@ import {
   getTenantBookings,
 } from "../controllers/booking.controller.js";
 
-import {
-  authenticate,
-  authorizeRole,
-  verifyBookingOwnership,
-} from "../middlewares/auth.middleware.js";
+import { authenticate, authorizeRole } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -22,24 +18,16 @@ router.post("/", authenticate, authorizeRole("USER"), createBooking);
 router.get("/", authenticate, authorizeRole("USER"), getBookings);
 
 // GET /api/bookings/:id — Lihat detail booking milik sendiri
-router.get(
-  "/:id",
-  authenticate,
-  authorizeRole("USER"),
-  verifyBookingOwnership,
-  getBookingById,
-);
+router.get("/:id", authenticate, authorizeRole("USER"), getBookingById);
 
 // PUT /api/bookings/:id/cancel — Batalkan booking milik sendiri
 router.put(
   "/:id/cancel",
   authenticate,
   authorizeRole("USER"),
-  verifyBookingOwnership,
   cancelBookingProcess,
 );
 
-// Belum aktif, karena belum ada data booking dari tenant terbaru
 router.get(
   "/tenant/bookings",
   authenticate,

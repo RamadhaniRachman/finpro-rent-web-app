@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { prisma } from "../utils/prisma.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import {
@@ -12,7 +12,7 @@ import {
   sendVerificationEmail,
   sendResetPasswordEmail,
   sendEmailChangeVerificationEmail,
-} from './email.service.js';
+} from "./email.service.js";
 
 export const registerUser = async (
   name: string,
@@ -74,12 +74,13 @@ export const login = async (
     throw new Error("Harap verifikasi email Anda terlebih dahulu");
 
   if (!user.password_hash) {
-    throw new Error('Akun ini terdaftar via Google/Facebook. Silakan login menggunakan Social Login.');
+    throw new Error(
+      "Akun ini terdaftar via Google/Facebook. Silakan login menggunakan Social Login.",
+    );
   }
 
   const isValid = await comparePassword(password, user.password_hash);
   if (!isValid) throw new Error("Invalid email or password.");
-
 
   if (requestedRole === "TENANT" && !user.tenant) {
     throw new Error("Akun ini tidak memiliki akses tenant");
@@ -101,90 +102,87 @@ export const login = async (
 export const requestPasswordReset = async (email: string) => {
   const user = await prisma.users.findUnique({ where: { email } });
 
-  // Silent return if user not found
-  if (!user) {
-    return;
-  }
-
-  // Silent return for Social Login accounts (GOOGLE, FACEBOOK, etc.)
-  // These accounts do not have a local password, so reset password is not applicable.
-  // We return silently (no error) to maintain the same generic response on the frontend.
-  const isLocalAccount = !user.provider || user.provider === 'LOCAL';
-  if (!isLocalAccount) {
+  // Silent return if user not found or if it's purely a Social Login account (no password_hash)
+  if (!user || !user.password_hash) {
     return;
   }
 
   const actualRole = (await prisma.tenant.findUnique({
     where: { user_id: user.id },
   }))
-    ? 'TENANT'
-    : 'USER';
+    ? "TENANT"
+    : "USER";
 
-  // Pass the current password hash so the token becomes invalid once the password changes (one-time use)
   const token = generateResetToken(
     { id: user.id, email: user.email, role: actualRole },
-    user.password_hash!,
+    user.password_hash,
   );
-  
+
   await sendResetPasswordEmail(user.email, token);
 };
 
 export const resendVerificationEmail = async (email: string) => {
   const user = await prisma.users.findUnique({ where: { email } });
-  if (!user) throw new Error('Email tidak ditemukan.');
-  if (user.is_verified) throw new Error('Akun ini sudah terverifikasi. Silakan langsung login.');
+  if (!user) throw new Error("Email tidak ditemukan.");
+  if (user.is_verified)
+    throw new Error("Akun ini sudah terverifikasi. Silakan langsung login.");
 
-  const token = generateVerificationToken({ id: user.id, email: user.email, role: 'USER' });
+  const token = generateVerificationToken({
+    id: user.id,
+    email: user.email,
+    role: "USER",
+  });
 
-  // User with password_hash is changing email; use the dedicated confirmation email
   if (user.password_hash) {
     await sendEmailChangeVerificationEmail(user.email, token);
   } else {
     await sendVerificationEmail(user.email, token);
   }
 
-  return { message: 'Email verifikasi baru telah dikirim. Silakan cek inbox Anda.' };
+  return {
+    message: "Email verifikasi baru telah dikirim. Silakan cek inbox Anda.",
+  };
 };
 
 export const verifyEmailUpdate = async (token: string) => {
   const decoded = verifyToken(token);
-  if (decoded.purpose !== 'verification') throw new Error('Token tidak valid.');
+  if (decoded.purpose !== "verification") throw new Error("Token tidak valid.");
 
   const user = await prisma.users.findUnique({ where: { id: decoded.id } });
-  if (!user) throw new Error('User tidak ditemukan.');
+  if (!user) throw new Error("User tidak ditemukan.");
 
   await prisma.users.update({
     where: { id: user.id },
-    data:  { is_verified: true },
+    data: { is_verified: true },
   });
 
-  return { message: 'Email berhasil diverifikasi.' };
+  return { message: "Email berhasil diverifikasi." };
 };
 
 export const confirmPasswordReset = async (
   token: string,
   newPassword: string,
 ) => {
-  // Step 1: Decode without verification to get the user ID
-  const unverified = jwt.decode(token) as { id?: string; purpose?: string } | null;
-  if (!unverified?.id || unverified.purpose !== 'reset') {
-    throw new Error('Token tidak valid.');
+  const unverified = jwt.decode(token) as {
+    id?: string;
+    purpose?: string;
+  } | null;
+  if (!unverified?.id || unverified.purpose !== "reset") {
+    throw new Error("Token tidak valid.");
   }
 
-  // Step 2: Fetch the user's CURRENT password hash from database
   const user = await prisma.users.findUnique({ where: { id: unverified.id } });
-  if (!user) throw new Error('User tidak ditemukan.');
+  if (!user) throw new Error("User tidak ditemukan.");
 
   if (!user.password_hash) {
-    throw new Error('Akun ini tidak memiliki password lokal (mungkin terdaftar via Social Login).');
+    throw new Error(
+      "Akun ini tidak memiliki password lokal (mungkin terdaftar via Social Login).",
+    );
   }
 
-  // Step 3: Verify the token using the current hash as part of the secret
-  // This will throw an error if the password was already changed (one-time use)
   const decoded = verifyResetToken(token, user.password_hash);
-  if (decoded.purpose !== 'reset') throw new Error('Token tidak valid.');
+  if (decoded.purpose !== "reset") throw new Error("Token tidak valid.");
 
-  // Step 4: Hash the new password and update the database
   const hashed = await hashPassword(newPassword);
   await prisma.users.update({
     where: { id: user.id },
@@ -193,61 +191,67 @@ export const confirmPasswordReset = async (
 };
 
 /**
- * Handles Social Login/Register (Google / Facebook via Firebase).
- *
- * Action = "REGISTER":
- *   - Creates a new user if not already exists.
- *   - If requestedRole is TENANT, also creates a record in the tenant table.
- *   - If user already exists (email or provider_id match), just logs them in.
- *
- * Action = "LOGIN":
- *   - USER: Finds or creates user, returns token.
- *   - TENANT: Finds user, but REJECTS if they are not registered as a Tenant.
+ * Handles Social Login/Register via the new user_providers table.
  */
 export const socialLogin = async (
-  email:         string,
-  name:          string,
-  provider:      string,
-  providerId:    string,
-  action:        'LOGIN' | 'REGISTER',
-  requestedRole: 'USER' | 'TENANT',
+  email: string,
+  name: string,
+  provider: string,
+  providerId: string,
+  action: "LOGIN" | "REGISTER",
+  requestedRole: "USER" | "TENANT",
 ) => {
-  // 1. Try to find existing user by provider_id (most accurate) or email
-  let user = await prisma.users.findFirst({
-    where: { provider_id: providerId },
-    include: { tenant: true },
+  // 1. Cari data provider di tabel terpisah
+  const providerRecord = await prisma.user_providers.findFirst({
+    where: { provider_id: providerId, provider: provider },
   });
 
+  let user: any = null;
+
+  if (providerRecord) {
+    // Jika provider ditemukan, ambil data user utamanya
+    user = await prisma.users.findUnique({
+      where: { id: providerRecord.user_id },
+      include: { tenant: true },
+    });
+  }
+
+  // 2. Jika tidak ketemu lewat provider_id, coba cari lewat email
   if (!user) {
     user = await prisma.users.findUnique({
       where: { email },
       include: { tenant: true },
     });
 
-    // Link this social provider to the existing email-based account
+    // Jika user ada, tautkan provider baru ini ke akun tersebut
     if (user) {
+      await prisma.user_providers.create({
+        data: { user_id: user.id, provider, provider_id: providerId },
+      });
       user = await prisma.users.update({
         where: { id: user.id },
-        data: { provider, provider_id: providerId, is_verified: true },
+        data: { is_verified: true },
         include: { tenant: true },
       });
     }
   }
 
   // ── REGISTER flow ────────────────────────────────────────────────────────
-  if (action === 'REGISTER') {
+  if (action === "REGISTER") {
     if (!user) {
-      // Create the base user account
+      // Buat akun utama di tabel users
       user = await prisma.users.create({
-        data: { name, email, provider, provider_id: providerId, is_verified: true },
+        data: { name, email, is_verified: true },
         include: { tenant: true },
+      });
+      // Buat relasi di tabel user_providers
+      await prisma.user_providers.create({
+        data: { user_id: user.id, provider, provider_id: providerId },
       });
     }
 
-    // If registering as TENANT and not yet a tenant, create tenant record
-    if (requestedRole === 'TENANT' && !user.tenant) {
+    if (requestedRole === "TENANT" && !user.tenant) {
       await prisma.tenant.create({ data: { user_id: user.id, name } });
-      // Reload user with tenant relation
       user = await prisma.users.findUnique({
         where: { id: user.id },
         include: { tenant: true },
@@ -256,25 +260,28 @@ export const socialLogin = async (
   }
 
   // ── LOGIN flow ───────────────────────────────────────────────────────────
-  if (action === 'LOGIN') {
+  if (action === "LOGIN") {
     if (!user) {
-      // For login, we don't auto-create accounts — email must already be registered
-      throw new Error('Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.');
+      throw new Error(
+        "Akun dengan email ini belum terdaftar. Silakan registrasi terlebih dahulu.",
+      );
     }
-
-    // Strict role validation: Tenant login MUST have a tenant record
-    if (requestedRole === 'TENANT' && !user.tenant) {
-      throw new Error('Akun ini tidak terdaftar sebagai Tenant. Silakan gunakan akun Tenant yang valid.');
+    if (requestedRole === "TENANT" && !user.tenant) {
+      throw new Error(
+        "Akun ini tidak terdaftar sebagai Tenant. Silakan gunakan akun Tenant yang valid.",
+      );
     }
   }
 
-  // Determine actual role from database (source of truth)
-  const actualRole = user!.tenant ? 'TENANT' : 'USER';
-  const token      = generateAccessToken({ id: user!.id, email: user!.email, role: actualRole });
+  const actualRole = user.tenant ? "TENANT" : "USER";
+  const token = generateAccessToken({
+    id: user.id,
+    email: user.email,
+    role: actualRole,
+  });
 
   return {
     token,
-    user: { id: user!.id, name: user!.name, email: user!.email, role: actualRole },
+    user: { id: user.id, name: user.name, email: user.email, role: actualRole },
   };
 };
-

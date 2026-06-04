@@ -41,17 +41,33 @@ export const getBookingById = async (
   res: Response,
 ): Promise<void> => {
   try {
+    // 1. Ambil userId dari token JWT
+    const userId = req.user?.id;
     const { id } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized. Harap login." });
+      return;
+    }
 
     if (!id || typeof id !== "string") {
       res.status(400).json({ error: "ID pesanan tidak valid" });
       return;
     }
-    // Panggil Service di sini
+
+    // 2. Panggil Service
     const booking = await getBookingDetails(id);
 
     if (!booking) {
       res.status(404).json({ error: "Pesanan tidak ditemukan" });
+      return;
+    }
+
+    // 3. 🚨 INLINE OWNERSHIP CHECK: Pastikan pesanan milik user yang sedang login
+    if (booking.user_id !== userId) {
+      res.status(403).json({
+        error: "Forbidden. Akses ditolak karena ini bukan pesanan Anda.",
+      });
       return;
     }
 
@@ -67,14 +83,36 @@ export const cancelBookingProcess = async (
   res: Response,
 ): Promise<void> => {
   try {
+    // 1. Ambil userId dari token JWT
+    const userId = req.user?.id;
     const { id } = req.params;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized. Harap login." });
+      return;
+    }
 
     if (!id || typeof id !== "string") {
       res.status(400).json({ error: "ID pesanan tidak valid" });
       return;
     }
 
-    // Lakukan proses update status
+    // 2. 🚨 INLINE OWNERSHIP CHECK: Cek dulu datanya sebelum dibatalkan
+    const booking = await getBookingDetails(id);
+    if (!booking) {
+      res.status(404).json({ error: "Pesanan tidak ditemukan" });
+      return;
+    }
+
+    if (booking.user_id !== userId) {
+      res.status(403).json({
+        error:
+          "Forbidden. Anda tidak memiliki izin untuk membatalkan pesanan ini.",
+      });
+      return;
+    }
+
+    // 3. Lakukan proses update status
     await cancelBookingById(id);
 
     res.status(200).json({ message: "Pesanan berhasil dibatalkan." });
