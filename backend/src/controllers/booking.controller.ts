@@ -4,11 +4,8 @@ import {
   getBookingDetails,
   cancelBookingById,
   getAllBookings,
-<<<<<<< HEAD
-  getBookingsByTenant,
-=======
   verifyBookingOwnership,
->>>>>>> features1
+  getBookingsByTenant,
 } from "../services/booking.service.js";
 
 // ── Helper: verify ownership and respond if check fails ──────────────
