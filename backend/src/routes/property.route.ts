@@ -8,12 +8,14 @@ const router = Router();
 const tenantAuth = [authenticate, authorizeRole('TENANT')];
 
 // ── PUBLIC ──────────────────────────────────────────────────
-// GET  /api/properties         → list semua properti (opsional ?city=)
-// GET  /api/properties/:id     → detail properti + harga dinamis (?date=YYYY-MM-DD)
-router.get('/',    ctrl.listProperties);
-router.get('/:id', ctrl.getProperty);
+// GET  /api/properties              → list semua properti (basic filter)
+// GET  /api/properties/search       → advanced search (availability, pagination, sort)
+// GET  /api/properties/:id          → detail properti + harga dinamis (?date=YYYY-MM-DD)
+router.get('/',       ctrl.listProperties);
+router.get('/search', ctrl.searchProperties);
+router.get('/:id',    ctrl.getProperty);
 
-// ── TENANT (Protected) ──────────────────────────────────────
+// ── TENANT: Property CRUD (Protected) ───────────────────────
 // GET    /api/properties/my         → daftar properti milik tenant
 // POST   /api/properties            → buat properti baru
 // PUT    /api/properties/:id        → update properti
@@ -22,6 +24,14 @@ router.get(   '/my',    ...tenantAuth, ctrl.getMyProperties);
 router.post(  '/',      ...tenantAuth, uploadPropertyImage.single('image'), ctrl.createProperty);
 router.put(   '/:id',  ...tenantAuth, ctrl.updateProperty);
 router.delete('/:id',  ...tenantAuth, ctrl.deleteProperty);
+
+// ── TENANT: Room Type CRUD ──────────────────────────────────
+// POST   /api/properties/:id/room-types       → buat tipe kamar baru
+// PUT    /api/properties/room-types/:id        → update tipe kamar
+// DELETE /api/properties/room-types/:id        → hapus tipe kamar
+router.post(  '/:id/room-types',   ...tenantAuth, ctrl.createRoomType);
+router.put(   '/room-types/:id',   ...tenantAuth, ctrl.updateRoomType);
+router.delete('/room-types/:id',   ...tenantAuth, ctrl.deleteRoomType);
 
 // ── PRICE MODIFIER ──────────────────────────────────────────
 // POST   /api/properties/room-types/:id/price-modifier → atur harga khusus

@@ -110,3 +110,103 @@ export const deletePriceModifier = async (userId: string, modifierId: string) =>
   await prisma.price_modifier.delete({ where: { id: modifierId } });
   return { message: 'Price modifier berhasil dihapus.' };
 };
+
+// ── Room Type CRUD ────────────────────────────────────────────
+type CreateRoomTypeInput = {
+  name: string;
+  description?: string;
+  price_per_night: number;
+  capacity?: number;
+  total_units?: number;
+  amenities?: string[];
+  image_urls?: string[];
+};
+
+type UpdateRoomTypeInput = Partial<CreateRoomTypeInput>;
+
+export const createRoomType = async (
+  userId: string, propertyId: string, data: CreateRoomTypeInput,
+) => {
+  const tenantId = await getTenantId(userId);
+  await assertPropertyOwner(propertyId, tenantId);
+
+  const totalUnits = data.total_units ?? 1;
+
+  // Use transaction: create room_type + auto-generate room_unit entries
+  return prisma.$transaction(async (tx) => {
+    const roomType = await tx.room_type.create({
+      data: {
+        property_id:     propertyId,
+        name:            data.name,
+        description:     data.description ?? null,
+        price_per_night: data.price_per_night,
+        capacity:        data.capacity ?? 1,
+        total_units:     totalUnits,
+        amenities:       data.amenities ?? [],
+        image_urls:      data.image_urls ?? [],
+      },
+    });
+
+    // Auto-generate room_unit entries (e.g. "101", "102", ...)
+    if (totalUnits > 0) {
+      const unitData = Array.from({ length: totalUnits }, (_, i) => ({
+        room_type_id: roomType.id,
+        unit_number:  `${(i + 1).toString().padStart(3, '0')}`,
+        is_active:    true,
+      }));
+      await tx.room_unit.createMany({ data: unitData });
+    }
+
+    return roomType;
+  });
+};
+
+export const updateRoomType = async (
+  userId: string, roomTypeId: string, data: UpdateRoomTypeInput,
+) => {
+  const tenantId = await getTenantId(userId);
+  const existing = await assertRoomTypeOwner(roomTypeId, tenantId);
+
+  const cleanData = Object.fromEntries(
+    Object.entries(data).filter(([_, v]) => v !== undefined),
+  );
+
+  // If total_units changed, sync room_unit entries
+  const newTotalUnits = data.total_units;
+  const oldTotalUnits = existing.total_units ?? 0;
+
+  return prisma.$transaction(async (tx) => {
+    const updated = await tx.room_type.update({
+      where: { id: roomTypeId },
+      data:  cleanData,
+    });
+
+    if (newTotalUnits !== undefined && newTotalUnits > oldTotalUnits) {
+      // Add missing units
+      const existingUnits = await tx.room_unit.findMany({
+        where: { room_type_id: roomTypeId },
+        select: { unit_number: true },
+      });
+      const existingNumbers = new Set(existingUnits.map((u) => u.unit_number));
+      const toCreate: { room_type_id: string; unit_number: string; is_active: boolean }[] = [];
+      let num = 1;
+      while (toCreate.length < newTotalUnits - oldTotalUnits) {
+        const unitNum = num.toString().padStart(3, '0');
+        if (!existingNumbers.has(unitNum)) {
+          toCreate.push({ room_type_id: roomTypeId, unit_number: unitNum, is_active: true });
+        }
+        num++;
+      }
+      if (toCreate.length > 0) await tx.room_unit.createMany({ data: toCreate });
+    }
+
+    return updated;
+  });
+};
+
+export const deleteRoomType = async (userId: string, roomTypeId: string) => {
+  const tenantId = await getTenantId(userId);
+  await assertRoomTypeOwner(roomTypeId, tenantId);
+  await prisma.room_type.delete({ where: { id: roomTypeId } });
+  return { message: 'Tipe kamar berhasil dihapus.' };
+};

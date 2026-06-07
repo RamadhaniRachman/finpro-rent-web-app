@@ -21,6 +21,7 @@ import OrderDetail from "./pages/users/OrderDetail";
 import VerifyEmailUpdatePage from "./components/profile/VerifyEmailUpdatePage";
 import TenantTransaction from "./pages/tenant/TransactionManagement";
 import TenantDashboardPage from "./pages/tenant/Dashboard";
+import PropertyManagementPage from "./pages/tenant/PropertyManagement";
 import UserProfilePage from "./pages/users/UserProfilePage";
 
 // ============================================================
@@ -105,6 +106,14 @@ function App() {
             element={
               <ProtectedRoute requiredRole="TENANT">
                 <TenantTransaction />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tenant/properties"
+            element={
+              <ProtectedRoute requiredRole="TENANT">
+                <PropertyManagementPage />
               </ProtectedRoute>
             }
           />

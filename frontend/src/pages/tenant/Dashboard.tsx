@@ -1,7 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import TenantLayout from "../../components/layout/TenantLayout";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   // Mendapatkan tanggal hari ini
   const currentDate = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
@@ -36,7 +38,10 @@ export default function Dashboard() {
             <button className="px-6 py-2.5 rounded-full border border-outline text-on-surface font-label-md hover:bg-surface-container transition-all">
               Download Report
             </button>
-            <button className="px-6 py-2.5 rounded-full bg-secondary text-white font-label-md hover:shadow-md transition-all">
+            <button 
+              onClick={() => navigate('/tenant/properties')}
+              className="px-6 py-2.5 rounded-full bg-secondary text-white font-label-md hover:shadow-md transition-all cursor-pointer border-none"
+            >
               Add Property
             </button>
           </div>
@@ -245,7 +250,10 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-6 py-3 text-secondary font-bold text-sm hover:bg-surface-container-low rounded-xl transition-all">
+            <button 
+              onClick={() => navigate('/tenant/bookings')}
+              className="w-full mt-6 py-3 text-secondary font-bold text-sm hover:bg-surface-container-low rounded-xl transition-all cursor-pointer border-none"
+            >
               View All Activity
             </button>
           </div>
@@ -331,7 +339,11 @@ export default function Dashboard() {
       </div>
 
       {/* Floating Action Button */}
-      <button className="fixed bottom-8 right-8 w-16 h-16 bg-secondary text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-50 hover:bg-secondary-container hover:text-on-secondary-container group">
+      <button 
+        onClick={() => navigate('/tenant/properties')}
+        title="Add new property"
+        className="fixed bottom-8 right-8 w-16 h-16 bg-secondary text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-50 hover:bg-secondary-container hover:text-on-secondary-container group cursor-pointer border-none"
+      >
         <span className="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform">
           add
         </span>
