@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import Navbar from "../../components/layout/Navbar";
 
@@ -13,25 +13,28 @@ import ManualTransfer from "../../components/users/payment/ManualTransfer";
 
 export default function Payment() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [bookingData, setBookingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch data pesanan secara dinamis
+  // Fetch data pesanan secara dinamis & verifikasi kepemilikan
   useEffect(() => {
     const fetchBookingDetails = async () => {
       try {
         setIsLoading(true);
         const response = await api.get(`/bookings/${id}`);
         setBookingData(response.data.data);
-      } catch (error) {
-        console.error("Gagal mengambil data pesanan:", error);
+      } catch (error: any) {
+        console.error("Akses Ditolak / Gagal memuat pesanan:", error);
+        alert(error.response?.data?.error || "Pesanan tidak ditemukan atau bukan milik Anda.");
+        navigate("/bookings"); // Kick user back if not owner
       } finally {
         setIsLoading(false);
       }
     };
 
     if (id) fetchBookingDetails();
-  }, [id]);
+  }, [id, navigate]);
 
   if (isLoading) {
     return (
@@ -60,6 +63,8 @@ export default function Payment() {
 
   // Asumsi dari backend ada field expired_at, sesuaikan jika namanya berbeda
   const expiredAt = bookingData.expired_at || bookingData.created_at;
+
+
 
   return (
     <div className="bg-surface text-on-surface font-body-md text-body-md min-h-screen flex flex-col antialiased">
