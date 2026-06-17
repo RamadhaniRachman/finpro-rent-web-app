@@ -246,8 +246,8 @@ export const getRoomCalendarPrices = async (roomId: string, monthStr: string) =>
     throw new Error('Format bulan tidak valid. Gunakan YYYY-MM.');
   }
 
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+  const year = parseInt(parts[0]!, 10);
+  const month = parseInt(parts[1]!, 10) - 1; // JS months are 0-indexed
 
   if (isNaN(year) || isNaN(month)) {
     throw new Error('Format bulan tidak valid. Gunakan YYYY-MM.');
