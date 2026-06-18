@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import api from "../../api/axiosConfig";
 import TenantLayout from "../../components/layout/TenantLayout";
-import PropertySelectorBar from "../../components/tenant/calendar/PropertySelectorBar";
 import AnalyticsSidebar from "../../components/tenant/calendar/AnalyticsSidebar";
 import CalendarGrid from "../../components/tenant/calendar/CalendarGrid";
+// ❌ Import PropertySelectorBar sudah dihapus karena sudah gabung di CalendarGrid
 
 export default function TenantPropertyCalendarPage() {
   const [calendarData, setCalendarData] = useState<any[]>([]);
@@ -120,13 +120,8 @@ export default function TenantPropertyCalendarPage() {
       title="Calendar"
       subtitle="Lihat kalender ketersediaan properti"
     >
-      <PropertySelectorBar
-        calendarData={calendarData}
-        selectedPropertyId={selectedPropertyId}
-        setSelectedPropertyId={setSelectedPropertyId}
-      />
-
-      <div className="flex flex-col xl:flex-row flex-1 p-4 md:p-6 lg:p-10 gap-6 lg:gap-8 max-w-[1280px] mx-auto w-full animate-fade-in">
+      <div className="flex flex-col xl:flex-row flex-1 gap-6 lg:gap-8 max-w-[1280px] mx-auto w-full animate-fade-in pt-2 pb-10">
+        {/* ✅ CalendarGrid sekarang menerima semua props properti */}
         <CalendarGrid
           currentDate={currentDate}
           handlePrevMonth={() =>
@@ -138,6 +133,9 @@ export default function TenantPropertyCalendarPage() {
           isLoading={isLoading}
           calendarDays={calendarDays}
           getDayStatus={getDayStatus}
+          calendarData={calendarData}
+          selectedPropertyId={selectedPropertyId}
+          setSelectedPropertyId={setSelectedPropertyId}
         />
 
         <AnalyticsSidebar metrics={sidebarMetrics} />
