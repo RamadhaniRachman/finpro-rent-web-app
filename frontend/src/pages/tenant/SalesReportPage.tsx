@@ -71,26 +71,15 @@ export default function TenantSalesReportPage() {
       <div className="p-4 md:p-6 lg:p-10 max-w-[1280px] mx-auto w-full animate-fade-in">
         {/* Header Section */}
         <header className="flex flex-col xl:flex-row xl:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12">
-          <div>
-            <h2 className="font-headline-md text-2xl md:text-3xl font-bold text-primary mb-1">
-              Sales Report & Analysis
-            </h2>
-            <p className="text-on-surface-variant font-body-md opacity-80 text-sm md:text-base">
-              Detailed revenue breakdown and performance metrics.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 w-full xl:w-auto">
-            {/* Popover Component */}
-            <DateRangePickerPopover
-              startDate={startDate}
-              endDate={endDate}
-              setStartDate={setStartDate}
-              setEndDate={setEndDate}
-              isOpen={isDatePickerOpen}
-              setIsOpen={setIsDatePickerOpen}
-            />
-          </div>
+          {/* Popover Component */}
+          <DateRangePickerPopover
+            startDate={startDate}
+            endDate={endDate}
+            setStartDate={setStartDate}
+            setEndDate={setEndDate}
+            isOpen={isDatePickerOpen}
+            setIsOpen={setIsDatePickerOpen}
+          />
         </header>
 
         {/* Metrics Component */}

@@ -13,6 +13,10 @@ interface CalendarGridProps {
     totalAvailable: number;
     totalUnits: number;
   };
+  // Props tambahan dari PropertySelectorBar
+  calendarData: any[];
+  selectedPropertyId: string;
+  setSelectedPropertyId: (id: string) => void;
 }
 
 export default function CalendarGrid({
@@ -22,19 +26,23 @@ export default function CalendarGrid({
   isLoading,
   calendarDays,
   getDayStatus,
+  calendarData,
+  selectedPropertyId,
+  setSelectedPropertyId,
 }: CalendarGridProps) {
   return (
     <section className="flex-1 flex flex-col gap-4 md:gap-6 w-full">
-      {/* Controls & Legend */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Controls: Title, Month Nav, & Property Selector */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        {/* Kiri: Judul dan Navigasi Bulan */}
         <div className="flex items-center justify-between sm:justify-start gap-4 w-full sm:w-auto">
-          <h3 className="font-headline-sm text-lg md:text-2xl font-bold text-primary">
+          <h3 className="font-headline-sm text-lg md:text-2xl font-bold text-primary truncate max-w-[150px] sm:max-w-none">
             {currentDate.toLocaleString("en-US", {
               month: "long",
               year: "numeric",
             })}
           </h3>
-          <div className="flex bg-surface-container rounded-lg p-1 border border-outline-variant/20 shadow-sm">
+          <div className="flex bg-surface-container rounded-lg p-1 border border-outline-variant/20 shadow-sm shrink-0">
             <button
               onClick={handlePrevMonth}
               className="p-1 md:p-1.5 hover:bg-white rounded-md transition-all"
@@ -53,24 +61,48 @@ export default function CalendarGrid({
             </button>
           </div>
         </div>
-
-        <button className="hidden sm:block bg-primary text-on-primary px-6 py-2.5 rounded-full text-sm font-bold hover:opacity-90 transition-all shadow-sm">
-          Export
-        </button>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 py-3 px-4 md:px-5 bg-surface-container-low rounded-xl border border-outline-variant/20 shadow-sm text-[10px] md:text-xs font-bold">
-        <span className="text-on-surface-variant uppercase tracking-wider hidden md:block">
-          Status Legend:
-        </span>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#d0e9d4]"></span>
-          <span className="text-on-surface-variant">Available</span>
+      {/* Legend & Desktop Export Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-4 py-3 px-4 md:px-5 bg-surface-container-low rounded-xl border border-outline-variant/20 shadow-sm text-[10px] md:text-xs font-bold w-full sm:w-auto">
+          <span className="text-on-surface-variant uppercase tracking-wider hidden md:block">
+            Status Legend:
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-[#d0e9d4]"></span>
+            <span className="text-on-surface-variant">Available</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-secondary-container"></span>
+            <span className="text-on-surface-variant">Occupied</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-secondary-container"></span>
-          <span className="text-on-surface-variant">Occupied</span>
+
+        {/* Kanan: Dropdown Pilihan Properti */}
+        <div className="flex items-center bg-surface-container-low rounded-xl px-4 py-2 border border-outline-variant/30 w-full xl:w-auto shadow-sm">
+          <span className="material-symbols-outlined text-on-surface-variant text-[20px] mr-2 shrink-0">
+            location_on
+          </span>
+          <select
+            value={selectedPropertyId}
+            onChange={(e) => setSelectedPropertyId(e.target.value)}
+            className="bg-transparent border-none focus:ring-0 text-sm font-bold text-on-surface cursor-pointer p-0 pr-8 outline-none w-full truncate appearance-none"
+            style={{
+              backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2349454F%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right center",
+              backgroundSize: "16px",
+            }}
+          >
+            {calendarData.map((prop) => (
+              <option key={prop.property_id} value={prop.property_id}>
+                {prop.property_name}
+              </option>
+            ))}
+            {calendarData.length === 0 && <option>No property found</option>}
+          </select>
         </div>
       </div>
 
@@ -161,11 +193,6 @@ export default function CalendarGrid({
           )}
         </div>
       </div>
-
-      {/* Export button moved to bottom for mobile */}
-      <button className="sm:hidden w-full bg-primary text-on-primary px-6 py-3 rounded-xl text-sm font-bold shadow-sm">
-        Export Report
-      </button>
     </section>
   );
 }

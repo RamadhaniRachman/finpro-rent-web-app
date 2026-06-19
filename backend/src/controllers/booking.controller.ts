@@ -4,39 +4,19 @@ import {
   getBookingDetails,
   cancelBookingById,
   getAllBookings,
-  verifyBookingOwnership,
   getBookingsByTenant,
 } from "../services/booking.service.js";
-
-// ── Helper: verify ownership and respond if check fails ──────────────
-const checkOwnership = async (
-  bookingId: string,
-  userId: string,
-  res: Response,
-): Promise<boolean> => {
-  try {
-    const isOwner = await verifyBookingOwnership(bookingId, userId);
-    if (!isOwner) {
-      res.status(403).json({ error: "Akses ditolak. Ini bukan pesanan Anda." });
-      return false;
-    }
-    return true;
-  } catch (err: any) {
-    res.status(404).json({ error: err.message ?? "Pesanan tidak ditemukan." });
-    return false;
-  }
-};
 
 export const createBooking = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user!.id;
     const { roomTypeId, checkIn, checkOut } = req.body;
 
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized. Harap login." });
+    if (!roomTypeId || !checkIn || !checkOut) {
+      res.status(400).json({ error: "Data booking tidak lengkap." });
       return;
     }
 
@@ -60,21 +40,15 @@ export const getBookingById = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
+    const id = req.params.id as string;
 
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized. Harap login." });
-      return;
-    }
-    if (!id || typeof id !== "string") {
+    if (!id) {
       res.status(400).json({ error: "ID pesanan tidak valid." });
       return;
     }
 
-    const passed = await checkOwnership(id, userId, res);
-    if (!passed) return;
-
+    // Hanya fokus mengambil detail data untuk dikirim ke frontend.
+    // Jika eksekusi sampai ke baris ini, middleware sudah menjamin ini adalah pesanan miliknya.
     const booking = await getBookingDetails(id);
     if (!booking) {
       res.status(404).json({ error: "Pesanan tidak ditemukan." });
@@ -93,21 +67,14 @@ export const cancelBookingProcess = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const userId = req.user?.id;
+    const id = req.params.id as string;
 
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized. Harap login." });
-      return;
-    }
-    if (!id || typeof id !== "string") {
+    if (!id) {
       res.status(400).json({ error: "ID pesanan tidak valid." });
       return;
     }
 
-    const passed = await checkOwnership(id, userId, res);
-    if (!passed) return;
-
+    // Langsung eksekusi! Validasi kepemilikan sudah diurus oleh Middleware di rute.
     await cancelBookingById(id);
     res.status(200).json({ message: "Pesanan berhasil dibatalkan." });
   } catch (error: any) {
@@ -124,12 +91,7 @@ export const getBookings = async (
 ): Promise<void> => {
   try {
     const { search, date } = req.query;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      res.status(401).json({ error: "Akses ditolak. Harap login." });
-      return;
-    }
+    const userId = req.user!.id;
 
     const searchQuery = typeof search === "string" ? search : undefined;
     const dateQuery = typeof date === "string" ? date : undefined;
@@ -149,21 +111,12 @@ export const getTenantBookings = async (
   res: Response,
 ): Promise<void> => {
   try {
-    // 1. Ambil ID Tenant dari token JWT (disuntikkan oleh middleware authenticate)
-    const tenantId = req.user?.id;
+    const tenantId = req.user!.id;
     const { search, status } = req.query;
-
-    if (!tenantId) {
-      res
-        .status(401)
-        .json({ error: "Unauthorized. Harap login terlebih dahulu." });
-      return;
-    }
 
     const searchQuery = typeof search === "string" ? search : undefined;
     const statusQuery = typeof status === "string" ? status : undefined;
 
-    // 2. Panggil service dengan parameter ter-kunci tenantId
     const bookings = await getBookingsByTenant(
       tenantId,
       searchQuery,

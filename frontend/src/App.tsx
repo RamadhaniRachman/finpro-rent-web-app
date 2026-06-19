@@ -31,9 +31,9 @@ import ManageRoomsPage from "./pages/tenant/ManageRoomsPage";
 import UserProfilePage from "./pages/users/UserProfilePage";
 import TenantBookingDetail from "./pages/tenant/BookingDetail";
 import PropertyCategoryManagement from "./pages/tenant/PropertyCategoryManagement";
-import TenantReviewPage from "./pages/tenant/TenantReviewPage";
-import TenantSalesReportPage from "./pages/tenant/TenantSalesReportPage";
-import TenantPropertyCalendarPage from "./pages/tenant/TenantPropertyCalendarPage";
+import TenantReviewPage from "./pages/tenant/ReviewPage";
+import TenantSalesReportPage from "./pages/tenant/SalesReportPage";
+import TenantPropertyCalendarPage from "./pages/tenant/CalendarPage";
 
 // ============================================================
 // KOMPONEN APP (ROUTING UTAMA)
