@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   useParams,
   Link,
@@ -8,13 +8,11 @@ import {
 import api from "../../api/axiosConfig";
 import Navbar from "../../components/layout/Navbar";
 
-// Komponen Modular
 import PaymentTimerBanner from "../../components/users/payment/PaymentTimerBanner";
 import MidtransPayment from "../../components/users/payment/MidtransPayment";
 import PaymentSummaryCard from "../../components/users/payment/PaymentSummaryCard";
 import ManualTransfer from "../../components/users/payment/ManualTransfer";
 
-// 👇 Import Modal Konfirmasinya di sini
 import PaymentConfirmationModal from "../../components/users/checkout/PaymentConfirmationModal";
 
 export default function Payment() {

@@ -1,6 +1,4 @@
-// components/payment/MidtransPayment.tsx
-import React, { useState, useEffect } from "react";
-// useNavigate dihapus karena navigasi sekarang ditangani oleh Payment.tsx setelah modal ditutup
+import { useState, useEffect } from "react";
 import api from "../../../api/axiosConfig";
 
 // 👇 1. Tambahkan totalAmount dan onPaymentResult di Interface

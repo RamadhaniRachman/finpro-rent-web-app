@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "../../api/axiosConfig";
 import TenantLayout from "../../components/layout/TenantLayout";
 import AnalyticsSidebar from "../../components/tenant/calendar/AnalyticsSidebar";
