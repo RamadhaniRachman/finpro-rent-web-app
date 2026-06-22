@@ -1,10 +1,8 @@
-// src/pages/Checkout.tsx
 import { useState, useEffect } from "react";
 import api from "../../api/axiosConfig";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "../../components/layout/Navbar";
 
-// Import komponen modular yang baru saja dibuat
 import BookingDetailsCard from "../../components/users/checkout/BookingDetailCart";
 import ReviewNoticeCard from "../../components/users/checkout/ReviewNoticeCard";
 import OrderSummarySidebar from "../../components/users/checkout/OrderSummarySidebar";
@@ -15,7 +13,6 @@ export default function Checkout() {
   const searchParams = new URLSearchParams(location.search);
   const roomTypeId = searchParams.get("roomTypeId");
 
-  // 1. Menangkap data state (Termasuk variabel dinamis)
   const {
     checkIn,
     checkOut,
@@ -28,7 +25,6 @@ export default function Checkout() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Proteksi jika halaman diakses langsung tanpa lewat pemesanan
   useEffect(() => {
     if (!checkIn || !checkOut || !roomTypeId) {
       alert("Sesi pesanan tidak valid. Silakan pilih kamar terlebih dahulu.");
@@ -36,7 +32,6 @@ export default function Checkout() {
     }
   }, [checkIn, checkOut, roomTypeId, navigate]);
 
-  // 2. Hitung durasi dan harga
   const startDate = new Date(checkIn || new Date());
   const endDate = new Date(checkOut || new Date());
   const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
@@ -60,13 +55,15 @@ export default function Checkout() {
         checkIn: new Date(checkIn).toISOString(),
         checkOut: new Date(checkOut).toISOString(),
       };
+      const bookingResponse = await api.post("/bookings", payload);
+      const bookingId = bookingResponse.data.data.id;
 
-      const response = await api.post("/bookings", payload);
-      const bookingData = response.data.data;
-      navigate(`/payment/${bookingData.id}`);
+      // Langsung arahkan ke halaman Payment
+      navigate(`/payment/${bookingId}`);
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.error ||
+        error.response?.data?.message ||
         error.message ||
         "Terjadi kesalahan saat membuat pesanan.";
       alert(`Gagal: ${errorMessage}`);
@@ -75,7 +72,6 @@ export default function Checkout() {
     }
   };
 
-  // Jangan render konten jika data kosong (mencegah error sebelum useEffect men-redirect)
   if (!checkIn || !checkOut) return null;
 
   return (
@@ -84,7 +80,6 @@ export default function Checkout() {
 
       <main className="flex-grow pt-8 md:pt-12 pb-24 px-6 md:px-16 max-w-[1280px] mx-auto w-full">
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 md:gap-12">
-          {/* KOLOM KIRI */}
           <div className="lg:col-span-7 space-y-10">
             <section>
               <h1 className="font-headline-md text-4xl font-bold text-primary mb-2">
@@ -95,18 +90,14 @@ export default function Checkout() {
                 mengonfirmasi penginapan Anda.
               </p>
             </section>
-
             <BookingDetailsCard
               checkInFormatted={formatDate(checkIn)}
               checkOutFormatted={formatDate(checkOut)}
               guestCount={guestCount}
               diffDays={diffDays}
             />
-
             <ReviewNoticeCard />
           </div>
-
-          {/* KOLOM KANAN */}
           <aside className="lg:col-span-5">
             <div className="sticky top-28 space-y-6">
               <OrderSummarySidebar

@@ -1,22 +1,33 @@
 // components/payment/MidtransPayment.tsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// useNavigate dihapus karena navigasi sekarang ditangani oleh Payment.tsx setelah modal ditutup
 import api from "../../../api/axiosConfig";
 
+// 👇 1. Tambahkan totalAmount dan onPaymentResult di Interface
 interface MidtransPaymentProps {
   orderId: string;
+  totalAmount: number;
+  onPaymentResult: (
+    status: "success" | "pending" | "error",
+    amount: number,
+  ) => void;
 }
+
 declare global {
   interface Window {
     snap: any;
   }
 }
 
-export default function MidtransPayment({ orderId }: MidtransPaymentProps) {
+// 👇 2. Terima props yang baru ditambahkan
+export default function MidtransPayment({
+  orderId,
+  totalAmount,
+  onPaymentResult,
+}: MidtransPaymentProps) {
   const [isProcessing, setIsProcessing] = useState(false);
-  const navigate = useNavigate();
 
-  // Injeksi script Midtrans
+  // Injeksi script Midtrans (Sangat rapi!)
   useEffect(() => {
     const midtransScriptUrl = "https://app.sandbox.midtrans.com/snap/snap.js";
     const myMidtransClientKey = import.meta.env.VITE_MIDTRANS_CLIENT_KEY;
@@ -48,7 +59,8 @@ export default function MidtransPayment({ orderId }: MidtransPaymentProps) {
           } catch (err) {
             console.error("Gagal sinkronisasi status:", err);
           }
-          navigate("/bookings");
+          // 👇 3. Panggil onPaymentResult untuk memunculkan Modal Sukses
+          onPaymentResult("success", totalAmount);
         },
         onPending: async function (result: any) {
           try {
@@ -58,11 +70,13 @@ export default function MidtransPayment({ orderId }: MidtransPaymentProps) {
           } catch (err) {
             console.error("Gagal sinkronisasi status:", err);
           }
-          navigate("/bookings");
+          // 👇 4. Panggil onPaymentResult untuk memunculkan Modal Pending
+          onPaymentResult("pending", totalAmount);
         },
         onError: function (result: any) {
-          alert("Payment failed!");
           console.error(result);
+          // 👇 5. Panggil onPaymentResult untuk memunculkan Modal Error
+          onPaymentResult("error", totalAmount);
         },
         onClose: function () {
           // Hanya tertutup tanpa alert mengganggu

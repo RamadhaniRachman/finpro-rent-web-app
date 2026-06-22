@@ -1,22 +1,39 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import {
+  useParams,
+  Link,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import api from "../../api/axiosConfig";
 import Navbar from "../../components/layout/Navbar";
 
-// Import semua komponen modular yang sudah kamu buat dengan rapi
+// Komponen Modular
 import PaymentTimerBanner from "../../components/users/payment/PaymentTimerBanner";
 import MidtransPayment from "../../components/users/payment/MidtransPayment";
 import PaymentSummaryCard from "../../components/users/payment/PaymentSummaryCard";
 import ManualTransfer from "../../components/users/payment/ManualTransfer";
-// (Atau kamu bisa pakai OrderSummarySidebar jika lebih suka desain yang itu)
+
+// 👇 Import Modal Konfirmasinya di sini
+import PaymentConfirmationModal from "../../components/users/checkout/PaymentConfirmationModal";
 
 export default function Payment() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams(); // 👈 2. Inisialisasi searchParams
   const [bookingData, setBookingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch data pesanan secara dinamis & verifikasi kepemilikan
+  // 👇 STATE UNTUK MODAL KONFIRMASI
+  const [modalOpen, setModalOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<
+    "success" | "pending" | "error" | null
+  >(null);
+  const [transactionInfo, setTransactionInfo] = useState({
+    orderId: "",
+    amount: 0,
+  });
+
   useEffect(() => {
     const fetchBookingDetails = async () => {
       try {
@@ -29,14 +46,32 @@ export default function Payment() {
           error.response?.data?.error ||
             "Pesanan tidak ditemukan atau bukan milik Anda.",
         );
-        navigate("/bookings"); // Kick user back if not owner
+        navigate("/bookings"); // Tendang kembali ke halaman bookings jika error
       } finally {
-        setIsLoading(false);
+        setIsLoading(false); // 👈 Ini yang bikin loading berhenti!
       }
     };
 
     if (id) fetchBookingDetails();
   }, [id, navigate]);
+
+  // 👇 FUNGSI UNTUK MENANGKAP HASIL DARI MIDTRANS
+  const handleMidtransResult = (
+    status: "success" | "pending" | "error",
+    amount: number,
+  ) => {
+    setTransactionInfo({ orderId: id || "", amount });
+    setPaymentStatus(status);
+    setModalOpen(true);
+  };
+
+  // 👇 FUNGSI SAAT MODAL DITUTUP
+  const handleModalClose = () => {
+    setModalOpen(false);
+    if (paymentStatus === "success" || paymentStatus === "pending") {
+      navigate("/bookings");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -62,8 +97,6 @@ export default function Payment() {
   const propertyName =
     bookingData.room_unit?.room_type?.property?.name || "Evergreen Property";
   const totalAmount = Number(bookingData.total_price);
-
-  // Asumsi dari backend ada field expired_at, sesuaikan jika namanya berbeda
   const expiresAt = bookingData.expires_at || bookingData.created_at;
 
   return (
@@ -71,9 +104,7 @@ export default function Payment() {
       <Navbar />
 
       <main className="flex-grow max-w-[1280px] mx-auto w-full px-6 md:px-16 py-6 md:py-10">
-        {/* 1. BANNER TIMER DI PALING ATAS */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          {/* Bagian Kiri: Judul */}
           <div>
             <h1 className="text-3xl font-bold text-primary">
               Complete Your Payment
@@ -82,18 +113,19 @@ export default function Payment() {
               Please choose a payment method to confirm the booking.
             </p>
           </div>
-
-          {/* Bagian Kanan: Timer */}
           <div className="w-full md:w-auto shrink-0 min-w-[300px]">
             <PaymentTimerBanner expiresAt={expiresAt} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* KIRI: Metode Pembayaran */}
           <div className="lg:col-span-7 flex flex-col gap-6">
-            {/* 2. MIDTRANS */}
-            <MidtransPayment orderId={bookingData.id} />
+            {/* 👇 Berikan props onPaymentResult ke komponen Midtrans */}
+            <MidtransPayment
+              orderId={bookingData.id}
+              totalAmount={totalAmount}
+              onPaymentResult={handleMidtransResult}
+            />
 
             <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-outline-variant/30"></div>
@@ -103,13 +135,10 @@ export default function Payment() {
               <div className="flex-grow border-t border-outline-variant/30"></div>
             </div>
 
-            {/* 3. KOMPONEN MANUAL TRANSFER YANG SUDAH DIPECAH */}
             <ManualTransfer orderId={bookingData.id} amount={totalAmount} />
           </div>
 
-          {/* KANAN: Order Summary */}
           <div className="lg:col-span-5">
-            {/* 4. SUMMARY CARD / SIDEBAR */}
             <PaymentSummaryCard
               orderId={bookingData.id}
               totalAmount={totalAmount}
@@ -118,6 +147,15 @@ export default function Payment() {
           </div>
         </div>
       </main>
+
+      {/* 👇 RENDER MODAL DI BAWAH SINI */}
+      <PaymentConfirmationModal
+        isOpen={modalOpen}
+        status={paymentStatus}
+        orderId={transactionInfo.orderId}
+        amount={transactionInfo.amount}
+        onClose={handleModalClose}
+      />
     </div>
   );
 }
