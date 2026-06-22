@@ -1,4 +1,3 @@
-import React from "react";
 import type { DashboardStats } from "../../../pages/tenant/Dashboard";
 
 interface Props {
@@ -56,9 +55,9 @@ export default function TopPerformer({ property }: Props) {
             </div>
             <div>
               <p className="text-on-surface-variant text-xs font-bold mb-1 uppercase tracking-wider">
-                Occupancy
+                Total Bookings
               </p>
-              <p className="text-primary font-bold">{property.occupancy}%</p>
+              <p className="text-primary font-bold">{property.occupancy}x</p>
             </div>
           </div>
         </div>

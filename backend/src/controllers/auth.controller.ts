@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import * as authService from '../services/auth.service.js';
+import * as authService from '../services/auth/auth.service.js';
 import * as authSchema from '../schemas/auth.schema.js';
 import { verifyFirebaseToken } from '../utils/firebase.js';
 

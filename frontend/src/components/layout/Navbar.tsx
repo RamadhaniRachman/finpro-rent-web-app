@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NavDropdown from "./NavDropdown";
 import Toast from "./Toast";
-import CheckoutNavbar from "./CheckoutNavbar";
 import MobileMenu from "./MobileMenu";
 
 export default function Navbar() {
@@ -15,7 +14,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef<HTMLDivElement>(null);
-
   // Close profile dropdown on outside click
   useEffect(() => {
     if (!open) return;
@@ -30,7 +28,6 @@ export default function Navbar() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
-
   // Sync avatar
   useEffect(() => {
     if (!user?.token) return;
@@ -61,7 +58,6 @@ export default function Navbar() {
   const isTenant = user?.role === "TENANT";
   const isUser = user?.role === "USER";
   const isLoggedIn = !!user;
-
   const navItems = [
     { name: "Explore", path: "/explore" },
     { name: "Our Mission", path: "/sustainability" },
@@ -71,21 +67,11 @@ export default function Navbar() {
         ]
       : []),
   ];
-
   // Logic Checkout Isolation
   const isCheckoutPhase =
     location.pathname.startsWith("/checkout") ||
     location.pathname.startsWith("/payment") ||
     location.pathname.startsWith("/order");
-
-  if (isCheckoutPhase) {
-    return (
-      <>
-        {toast && <Toast msg={toast} />}
-        <CheckoutNavbar />
-      </>
-    );
-  }
 
   const isHome = location.pathname === "/";
 
@@ -101,23 +87,28 @@ export default function Navbar() {
               <button
                 onClick={() => navigate(-1)}
                 aria-label="Go back"
-                className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high transition-colors w-10 h-10 rounded-full border-none bg-transparent flex items-center justify-center -ml-2"
+                className="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high transition-colors w-10 h-10 shrink-0 rounded-full border-none bg-transparent flex items-center justify-center -ml-2"
               >
                 arrow_back
               </button>
             ) : (
-              <div className="w-10 h-10 -ml-2 hidden md:block invisible pointer-events-none" />
+              <div className="w-10 h-10 -ml-2 shrink-0 invisible pointer-events-none" />
             )}
             <Link
               to="/"
-              className="font-display font-bold text-xl text-primary flex items-center whitespace-nowrap"
+              className="flex items-center gap-2 no-underline shrink-0"
             >
-              Finpro Escapes
+              <span className="material-symbols-outlined text-primary text-[26px] [font-variation-settings:'FILL'_1]">
+                forest
+              </span>
+              <span className="font-display font-bold text-[18px] text-primary hidden sm:block">
+                Evergreen Escapes
+              </span>
             </Link>
           </div>
 
           {/* Tengah: Desktop Nav */}
-          {!isTenant && (
+          {!isTenant && !isCheckoutPhase && (
             <nav className="hidden md:flex items-center justify-center gap-8 absolute left-1/2 -translate-x-1/2 w-fit z-10">
               {navItems.map((item) => {
                 const isActive =
@@ -140,14 +131,6 @@ export default function Navbar() {
           {/* Kanan: Desktop Profile & Mobile Hamburger */}
           <div className="flex items-center gap-3 z-20">
             <div className="hidden md:flex items-center gap-3">
-              {isLoggedIn && (
-                <button className="w-10 h-10 rounded-full border border-outline-variant bg-transparent flex items-center justify-center text-primary hover:bg-surface-low transition-colors cursor-pointer relative">
-                  <span className="material-symbols-outlined text-[22px]">
-                    notifications
-                  </span>
-                  <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-surface-white"></span>
-                </button>
-              )}
 
               {!isLoggedIn ? (
                 <Link

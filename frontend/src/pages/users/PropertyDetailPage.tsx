@@ -176,7 +176,7 @@ export default function PropertyDetailPage() {
           {property && (
             <section className="mt-16 pt-8 border-t border-outline-variant">
               <h2 className="font-headline-sm text-2xl font-bold text-primary">
-                Ulasan Tamu
+                Guest Reviews
               </h2>
               <PropertyReviews reviews={property.review} />
             </section>

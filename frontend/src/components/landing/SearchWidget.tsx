@@ -100,10 +100,7 @@ function FullSearchForm({ search, setSearch, city, setCity, checkin, setCheckin,
     </div>
   );
 }
-
-// ── Main Component ────────────────────────────────────────────
 interface SearchWidgetProps {
-  // Provide specific threshold for scrolling to collapse
   scrollThreshold?: number;
 }
 
@@ -119,15 +116,11 @@ export default function SearchWidget({ scrollThreshold = 350 }: SearchWidgetProp
   const [isExpanded, setIsExpanded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Dynamic Scroll Listener
-  // We use window scroll instead of IntersectionObserver because when the parent
-  // wrapper is "sticky", it never actually leaves the viewport!
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > scrollThreshold);
     };
-    
-    // Check initial position
+
     handleScroll();
     
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -148,20 +141,12 @@ export default function SearchWidget({ scrollThreshold = 350 }: SearchWidgetProp
 
   return (
     <>
-      {/*
-        ── Container with fixed min-height ───────────────────────────
-        Keeps layout stable during the smooth transition
-      */}
       <div className="relative w-full flex justify-center min-h-[56px] sm:min-h-[76px] lg:min-h-[82px] items-center">
 
-        {/* ── MOBILE VIEW: Always show Pill ── */}
         <div className="w-full flex justify-center sm:hidden">
           <CompactPill onClick={() => setIsExpanded(true)} search={search} city={city} />
         </div>
-
-        {/* ── DESKTOP VIEW: Smooth crossfade between Pill and Form ── */}
         <div className="hidden sm:block w-full">
-          {/* Pill State */}
           <div 
             className={`absolute inset-0 flex justify-center items-center transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               isScrolled 
@@ -172,7 +157,6 @@ export default function SearchWidget({ scrollThreshold = 350 }: SearchWidgetProp
             <CompactPill onClick={() => setIsExpanded(true)} search={search} city={city} />
           </div>
 
-          {/* Full Form State */}
           <div 
             className={`absolute inset-0 w-full transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               !isScrolled 
@@ -192,8 +176,6 @@ export default function SearchWidget({ scrollThreshold = 350 }: SearchWidgetProp
         </div>
 
       </div>
-
-      {/* ── EXPANDED OVERLAY (Triggered by clicking Pill) ── */}
       {isExpanded && (
         <>
           <div

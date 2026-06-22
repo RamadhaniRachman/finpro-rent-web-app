@@ -57,7 +57,7 @@ export default function BookingTable({
                   <span className="material-symbols-outlined animate-spin text-primary text-2xl mb-2 block mx-auto">
                     autorenew
                   </span>
-                  Memuat daftar pesanan...
+                  Loading bookings...
                 </td>
               </tr>
             ) : bookings.length > 0 ? (
@@ -85,7 +85,7 @@ export default function BookingTable({
                     {item.room_unit?.room_type?.property?.name || "Property"}
                   </td>
                   <td className="py-3 px-4 text-sm text-on-surface">
-                    {new Date(item.check_in).toLocaleDateString("id-ID", {
+                    {new Date(item.check_in).toLocaleDateString("en-US", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
@@ -156,7 +156,7 @@ export default function BookingTable({
                   colSpan={7}
                   className="text-center py-12 text-on-surface-variant text-sm"
                 >
-                  Tidak ada pesanan masuk dalam kategori ini.
+                  No bookings found in this category.
                 </td>
               </tr>
             )}

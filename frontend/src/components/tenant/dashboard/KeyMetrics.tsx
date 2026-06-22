@@ -1,4 +1,3 @@
-import React from "react";
 import type { DashboardStats } from "../../../pages/tenant/Dashboard"; // Sesuaikan path jika berbeda
 
 interface Props {

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import * as propertyService       from '../services/property.service.js';
-import * as publicService         from '../services/public-property.service.js';
+import * as propertyService       from '../services/property/property.service.js';
+import * as publicService         from '../services/public-property/public-property.service.js';
 
 // ── Public ────────────────────────────────────────────────────
 export const getCategories = async (req: Request, res: Response): Promise<void> => {

@@ -1,8 +1,14 @@
-const LINKS = ['Legal', 'Company', 'Privacy Policy', 'Terms of Service', 'Contact'];
+import { Link } from 'react-router-dom';
+
+const LINKS = [
+  { label: 'Home', path: '/' },
+  { label: 'Explore', path: '/explore' },
+  { label: 'Our Mission', path: '/sustainability' },
+];
 
 function ContactSection() {
   return (
-    <div className="bg-primary-container relative overflow-hidden py-20">
+    <div id="contact" className="bg-primary-container relative overflow-hidden py-20">
       <div className="absolute top-[-80px] right-[-80px] w-80 h-80 rounded-full bg-primary-fixed/10 blur-[60px] pointer-events-none" />
       <div className="relative z-10 max-w-[1280px] mx-auto px-5 md:px-8 lg:px-16">
         <div className="max-w-[640px] mx-auto text-center">
@@ -51,13 +57,13 @@ export default function Footer() {
               © {new Date().getFullYear()} Evergreen Escapes. All rights reserved.
             </p>
           </div>
-          <nav aria-label="Footer links" className="flex flex-wrap gap-x-6 gap-y-2">
-            {LINKS.map(label => (
-              <a key={label} href="#"
+          <nav aria-label="Footer links" className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            {LINKS.map(link => (
+              <Link key={link.label} to={link.path}
                 className="font-body text-[13px] text-on-surface-variant hover:text-primary transition-colors duration-200"
               >
-                {label}
-              </a>
+                {link.label}
+              </Link>
             ))}
           </nav>
         </div>

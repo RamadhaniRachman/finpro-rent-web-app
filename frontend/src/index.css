@@ -35,6 +35,11 @@
   --font-body: "Manrope", sans-serif;
 }
 
+/* Force vertical scrollbar to prevent layout shift during loading */
+html {
+  overflow-y: scroll;
+}
+
 /* Hide native browser password reveal icons (e.g. Edge) to prevent double toggles */
 @layer base {
   input[type="password"]::-ms-reveal,

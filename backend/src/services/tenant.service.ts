@@ -1,6 +1,27 @@
 import { prisma } from "../utils/prisma.js";
+
+export const getTenantByUserId = async (userId: string) => {
+  return await prisma.tenant.findUnique({ where: { user_id: userId } });
+};
 // Asumsi kamu sudah punya layanan email, kita panggil di sini
-import { sendConfirmationEmail } from "./email.service.js";
+import { sendConfirmationEmail } from "./email/email.service.js";
+
+// Helper untuk mengecek kepemilikan tenant
+export const verifyTenantOwnership = async (bookingId: string, userId: string) => {
+  const tenant = await prisma.tenant.findUnique({ where: { user_id: userId } });
+  if (!tenant) throw new Error("Anda tidak terdaftar sebagai tenant.");
+
+  const booking = await prisma.booking.findFirst({
+    where: {
+      id: bookingId,
+      room_unit: { room_type: { property: { tenant_id: tenant.id } } },
+    },
+  });
+
+  if (!booking)
+    throw new Error("Pesanan tidak ditemukan atau bukan milik properti Anda.");
+  return true;
+};
 
 // 1. Tenant Menerima Pembayaran Manual
 export const approvePaymentProcess = async (bookingId: string) => {

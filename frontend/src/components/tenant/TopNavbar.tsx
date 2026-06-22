@@ -46,9 +46,7 @@ export default function TopNavBar({ title, subtitle, onMenuClick }: TopNavBarPro
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="p-2 rounded-full hover:bg-surface-variant transition-colors">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
+
 
         {/* Wrapper untuk Dropdown agar bisa deteksi klik di luar */}
         <div className="relative" ref={dropdownRef}>

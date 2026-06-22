@@ -53,7 +53,7 @@ export default function FeaturedProperties() {
         
         setProperties(mappedData);
       } catch (err: any) {
-        const message = err.response?.data?.error ?? err.message ?? 'Gagal memuat data properti.';
+        const message = err.response?.data?.error ?? err.message ?? 'Failed to load properties.';
         setError(message);
       } finally {
         setIsLoading(false);
@@ -108,7 +108,7 @@ export default function FeaturedProperties() {
         {!isLoading && !error && displayed.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
             <span className="material-symbols-outlined text-[48px] text-outline">home_work</span>
-            <p className="text-on-surface-variant text-sm">Belum ada properti tersedia saat ini.</p>
+            <p className="text-on-surface-variant text-sm">No properties available at the moment.</p>
           </div>
         )}
 

@@ -1,226 +1,122 @@
 import type { Request, Response } from "express";
-import { prisma } from "../utils/prisma.js";
 import {
   approvePaymentProcess,
   rejectPaymentProcess,
   cancelBookingByTenantProcess,
   getBookingsByTenant,
   getBookingDetailByTenantProcess,
+  verifyTenantOwnership,
+  getTenantByUserId,
 } from "../services/tenant.service.js";
-import { executeSendReminder } from "../services/email.service.js";
-import { getTenantDashboardStats } from "../services/dashboard.service.js";
+import { executeSendReminder } from "../services/email/email.service.js";
+import { getTenantDashboardStats } from "../services/dashboard/dashboard.service.js";
 
-// Helper untuk mengecek apakah booking ini benar milik tenant yang sedang login
-const verifyTenantOwnership = async (bookingId: string, userId: string) => {
-  const tenant = await prisma.tenant.findUnique({ where: { user_id: userId } });
-  if (!tenant) throw new Error("Anda tidak terdaftar sebagai tenant.");
-
-  const booking = await prisma.booking.findFirst({
-    where: {
-      id: bookingId,
-      room_unit: { room_type: { property: { tenant_id: tenant.id } } },
-    },
-  });
-
-  if (!booking)
-    throw new Error("Pesanan tidak ditemukan atau bukan milik properti Anda.");
-  return true;
+// === HELPERS (DRY Principle) ===
+// 💡 Mengekstrak repetisi pengecekan autentikasi & ID parameter
+const validateUserAndId = (req: Request) => {
+  const userId = req.user?.id;
+  const { id } = req.params;
+  if (!userId) throw new Error("401:Unauthorized. Harap login.");
+  if (!id || typeof id !== "string") throw new Error("400:ID pesanan tidak valid");
+  return { userId, id };
 };
 
-export const approvePayment = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+// 💡 Mengatur status code dinamis sesuai custom error throw
+const sendError = (res: Response, err: any) => {
+  if (err.message.startsWith("401:")) return res.status(401).json({ error: err.message.substring(4) });
+  if (err.message.startsWith("400:")) return res.status(400).json({ error: err.message.substring(4) });
+  res.status(400).json({ error: err.message });
+};
+
+// === CONTROLLERS ===
+
+export const approvePayment = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    const { id } = req.params;
-
-    // 🚨 Type Guard: Pastikan id ada dan murni sebuah string
-    if (!id || typeof id !== "string") {
-      res.status(400).json({ error: "ID pesanan tidak valid" });
-      return;
-    }
-
-    await verifyTenantOwnership(id, userId!);
+    const { userId, id } = validateUserAndId(req);
+    await verifyTenantOwnership(id, userId);
     await approvePaymentProcess(id);
-
-    res.status(200).json({
-      message: "Pembayaran disetujui, email konfirmasi telah dikirim.",
-    });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    res.status(200).json({ message: "Pembayaran disetujui, email dikirim." });
+  } catch (err: any) {
+    sendError(res, err);
   }
 };
 
-export const rejectPayment = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const rejectPayment = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    const { id } = req.params;
-
-    // 🚨 Type Guard: Pastikan id ada dan murni sebuah string
-    if (!id || typeof id !== "string") {
-      res.status(400).json({ error: "ID pesanan tidak valid" });
-      return;
-    }
-
-    await verifyTenantOwnership(id, userId!);
+    const { userId, id } = validateUserAndId(req);
+    await verifyTenantOwnership(id, userId);
     await rejectPaymentProcess(id);
-
-    res.status(200).json({
-      message: "Pembayaran ditolak. Status kembali Menunggu Pembayaran.",
-    });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+    res.status(200).json({ message: "Pembayaran ditolak." });
+  } catch (err: any) {
+    sendError(res, err);
   }
 };
 
-export const cancelByTenant = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const cancelByTenant = async (req: Request, res: Response) => {
   try {
-    const userId = req.user?.id;
-    const { id } = req.params;
-
-    // 🚨 Type Guard: Pastikan id ada dan murni sebuah string
-    if (!id || typeof id !== "string") {
-      res.status(400).json({ error: "ID pesanan tidak valid" });
-      return;
-    }
-
-    await verifyTenantOwnership(id, userId!);
+    const { userId, id } = validateUserAndId(req);
+    await verifyTenantOwnership(id, userId);
     await cancelBookingByTenantProcess(id);
-
     res.status(200).json({ message: "Pesanan berhasil dibatalkan." });
-  } catch (error: any) {
-    res.status(400).json({ error: error.message });
+  } catch (err: any) {
+    sendError(res, err);
   }
 };
 
-export const getTenantBookings = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const getTenantBookings = async (req: Request, res: Response) => {
   try {
-    // 1. Ambil ID User dari token JWT (disuntikkan oleh middleware authenticate)
     const userId = req.user?.id;
-    const { search, status } = req.query;
+    if (!userId) return res.status(401).json({ error: "Unauthorized." });
+    
+    const tenant = await getTenantByUserId(userId);
+    if (!tenant) return res.status(403).json({ error: "Bukan tenant." });
 
-    if (!userId) {
-      res
-        .status(401)
-        .json({ error: "Unauthorized. Harap login terlebih dahulu." });
-      return;
-    }
-
-    // Cari data tenant berdasarkan user_id
-    const tenant = await prisma.tenant.findUnique({
-      where: { user_id: userId },
-    });
-
-    if (!tenant) {
-      res.status(403).json({ error: "Anda tidak terdaftar sebagai tenant." });
-      return;
-    }
-
-    const searchQuery = typeof search === "string" ? search : undefined;
-    const statusQuery = typeof status === "string" ? status : undefined;
-
-    // 2. Panggil service dengan parameter ter-kunci tenant.id
-    const bookings = await getBookingsByTenant(
-      tenant.id,
-      searchQuery,
-      statusQuery,
-    );
-
+    const search = typeof req.query.search === "string" ? req.query.search : undefined;
+    const status = typeof req.query.status === "string" ? req.query.status : undefined;
+    
+    const bookings = await getBookingsByTenant(tenant.id, search, status);
     res.status(200).json({ data: bookings });
-  } catch (error: any) {
-    console.error("Error fetching tenant bookings:", error);
-    res.status(500).json({
-      error: "Terjadi kesalahan pada server saat mengambil data pesanan.",
-    });
+  } catch (err: any) {
+    res.status(500).json({ error: "Gagal mengambil pesanan." });
   }
 };
 
-export const getTenantBookingDetail = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const getTenantBookingDetail = async (req: Request, res: Response) => {
   try {
-    // Pastikan req.params.id ada dan bertipe string
-    const id = req.params.id;
-
-    if (typeof id !== "string") {
-      res.status(400).json({ message: "ID pesanan tidak valid" });
-      return;
-    }
-
-    const userId = req.user?.id;
-    if (!userId) {
-      res.status(401).json({ message: "Unauthorized. Harap login." });
-      return;
-    }
-
-    // Cari data tenant berdasarkan user_id
-    const tenant = await prisma.tenant.findUnique({
-      where: { user_id: userId },
-    });
-
-    if (!tenant) {
-      res.status(403).json({ message: "Anda tidak terdaftar sebagai tenant." });
-      return;
-    }
+    const { userId, id } = validateUserAndId(req);
+    
+    const tenant = await getTenantByUserId(userId);
+    if (!tenant) return res.status(403).json({ message: "Bukan tenant." });
 
     const bookingData = await getBookingDetailByTenantProcess(id, tenant.id);
-
     res.status(200).json({ status: "success", data: bookingData });
-  } catch (error: any) {
-    res.status(404).json({ status: "error", message: error.message });
+  } catch (err: any) {
+    sendError(res, err);
   }
 };
 
-export const sendReminderEmail = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const sendReminderEmail = async (req: Request, res: Response) => {
   try {
-    const id = req.params.id as string;
+    const { id } = req.params;
+    if (!id || typeof id !== "string") return res.status(400).json({ error: "ID tidak valid" });
 
     const success = await executeSendReminder(id);
+    if (!success) return res.status(400).json({ error: "Gagal mengirim reminder." });
 
-    if (!success) {
-      res.status(400).json({
-        error:
-          "Gagal: Pesanan bukan CONFIRMED atau reminder sudah pernah dikirim.",
-      });
-      return;
-    }
-
-    res.status(200).json({ message: "Reminder email berhasil dikirim!" });
-  } catch (error: any) {
-    console.error("Gagal mengirim email pengingat:", error);
+    res.status(200).json({ message: "Reminder berhasil dikirim!" });
+  } catch (err: any) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-export const getDashboardStats = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
+export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    const userId = req.user!.id; // Diambil dari middleware authenticate
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const dashboardData = await getTenantDashboardStats(userId);
-
-    res.status(200).json({
-      message: "Berhasil mengambil data dashboard",
-      data: dashboardData,
-    });
-  } catch (error: any) {
-    console.error("Dashboard Error:", error);
-    res.status(500).json({ error: error.message || "Gagal memuat dashboard" });
+    res.status(200).json({ message: "Sukses", data: dashboardData });
+  } catch (err: any) {
+    res.status(500).json({ error: "Gagal memuat dashboard" });
   }
 };

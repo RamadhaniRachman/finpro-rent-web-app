@@ -74,18 +74,7 @@ export default function MobileMenu({
             );
           })}
 
-        {isLoggedIn && (
-          <Link
-            to="/notifications"
-            onClick={() => setMobileOpen(false)}
-            className="block py-3 px-2 rounded-lg text-[15px] font-medium text-on-surface hover:bg-surface-low flex items-center justify-between mt-2"
-          >
-            <span>Notifications</span>
-            <span className="bg-red-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-              New
-            </span>
-          </Link>
-        )}
+
 
         <hr className="border-surface-high my-2" />
 
