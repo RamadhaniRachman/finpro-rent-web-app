@@ -6,80 +6,8 @@ import Navbar from "../components/layout/Navbar";
 
 type LoginMode = "USER" | "TENANT";
 
-const INPUT_CLS =
-  "w-full pl-11 pr-11 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60";
-
-function AuthHeader() {
-  return (
-    <div className="mb-4">
-      <h1 className="font-display font-bold text-3xl text-on-surface mb-2">
-        Welcome Back
-      </h1>
-      <p className="text-on-surface-variant text-[15px]">
-        Sign in to your account to continue.
-      </p>
-    </div>
-  );
-}
-
-function AuthInput({
-  id,
-  label,
-  icon,
-  type,
-  value,
-  onChange,
-  disabled,
-  placeholder,
-  togglePass,
-}: any) {
-  return (
-    <div className="mb-5 relative">
-      <div className="flex justify-between items-center mb-2">
-        <label
-          htmlFor={id}
-          className="block text-[12px] font-bold uppercase tracking-wider text-on-surface-variant"
-        >
-          {label}
-        </label>
-        {togglePass && (
-          <Link
-            to="/forgot-password"
-            className="text-[12px] font-bold text-primary hover:underline"
-          >
-            Forgot password?
-          </Link>
-        )}
-      </div>
-      <div className="relative flex items-center">
-        <span className="material-symbols-outlined absolute left-4 text-outline text-[20px]">
-          {icon}
-        </span>
-        <input
-          id={id}
-          name={id}
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-          className={INPUT_CLS}
-        />
-        {togglePass && (
-          <button
-            type="button"
-            onClick={togglePass.onClick}
-            className="absolute right-4 text-outline hover:text-primary transition-colors cursor-pointer border-none bg-transparent"
-          >
-            <span className="material-symbols-outlined text-[20px]">
-              {togglePass.show ? "visibility_off" : "visibility"}
-            </span>
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
+import AuthHeader from "../components/auth/AuthHeader";
+import AuthInput from "../components/auth/AuthInput";
 
 export default function LoginPage() {
   const { login, user } = useAuth();
@@ -100,42 +28,44 @@ export default function LoginPage() {
     setError("");
   };
 
+  const processLogin = async () => {
+    const { default: api } = await import("../api/axiosConfig");
+    const endpoint = mode === "TENANT" ? "/auth/login/tenant" : "/auth/login";
+    const res = await api.post(endpoint, {
+      email: form.email.trim(),
+      password: form.password,
+    });
+    
+    login({
+      id: res.data.user.id,
+      name: res.data.user.name,
+      email: res.data.user.email,
+      role: res.data.user.role,
+    });
+    navigate(res.data.user.role === "TENANT" ? "/tenant/dashboard" : "/");
+  };
+
+  const handleError = (err: any) => {
+    const msg = err.response?.data?.error?.includes("Login gagal")
+      ? "Login failed. Please check your email and password."
+      : err.response?.data?.error || err.message || "Login failed.";
+    setError(msg);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email || !form.password)
-      return setError("Email and password are required.");
+    if (!form.email || !form.password) return setError("Email and password are required.");
+    
     setLoading(true);
     setError("");
     try {
-      const { default: api } = await import('../api/axiosConfig');
-      const endpoint = mode === "TENANT" ? "/auth/login/tenant" : "/auth/login";
-      
-      const res = await api.post(endpoint, {
-        email: form.email.trim(),
-        password: form.password,
-      });
-      
-      const data = res.data;
-
-      login({
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        role: data.user.role,
-      });
-      navigate(data.user.role === "TENANT" ? "/tenant/dashboard" : "/");
+      await processLogin();
     } catch (err: any) {
-      setError(
-        err.response?.data?.error?.includes("Login gagal")
-          ? "Login failed. Please check your email and password."
-          : (err.response?.data?.error || err.message || "Login failed.")
-      );
+      handleError(err);
     } finally {
       setLoading(false);
     }
   };
-
-
 
   const isTenant = mode === "TENANT";
 
