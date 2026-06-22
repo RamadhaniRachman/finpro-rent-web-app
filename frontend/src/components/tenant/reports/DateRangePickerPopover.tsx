@@ -1,5 +1,3 @@
-import React from "react";
-
 interface Props {
   startDate: string;
   endDate: string;

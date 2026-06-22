@@ -24,11 +24,10 @@ export default function PropertyReviews({ reviews }: PropertyReviewsProps) {
     return (
       <div className="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant text-center mt-8">
         <h3 className="font-headline-sm text-xl font-bold text-primary mb-2">
-          Belum ada ulasan
+          No reviews yet
         </h3>
         <p className="text-on-surface-variant text-sm">
-          Jadilah tamu pertama yang menginap dan membagikan pengalaman Anda di
-          sini!
+          Be the first guest to stay and share your experience here!
         </p>
       </div>
     );
@@ -57,7 +56,7 @@ export default function PropertyReviews({ reviews }: PropertyReviewsProps) {
             </span>
           </h2>
           <p className="text-on-surface-variant text-sm">
-            Berdasarkan {reviews.length} ulasan tamu
+            Based on {reviews.length} {reviews.length === 1 ? 'guest review' : 'guest reviews'}
           </p>
         </div>
       </div>
@@ -84,10 +83,10 @@ export default function PropertyReviews({ reviews }: PropertyReviewsProps) {
                 </div>
                 <div>
                   <p className="font-bold text-sm text-primary">
-                    {review.users?.name || "Tamu"}
+                    {review.users?.name || "Guest"}
                   </p>
                   <p className="text-xs text-on-surface-variant">
-                    {new Date(review.created_at).toLocaleDateString("id-ID", {
+                    {new Date(review.created_at).toLocaleDateString("en-US", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
@@ -116,7 +115,7 @@ export default function PropertyReviews({ reviews }: PropertyReviewsProps) {
             <p className="text-on-surface-variant text-sm leading-relaxed mb-4 flex-grow">
               {review.comment || (
                 <span className="italic opacity-70">
-                  Tamu memberikan penilaian tanpa komentar.
+                  Guest left a rating without a comment.
                 </span>
               )}
             </p>
@@ -129,7 +128,7 @@ export default function PropertyReviews({ reviews }: PropertyReviewsProps) {
                     reply
                   </span>
                   <p className="text-xs font-bold text-primary uppercase tracking-wider">
-                    Balasan Host
+                    Host Reply
                   </p>
                 </div>
                 <p className="text-sm text-on-surface-variant bg-surface-container-lowest p-3 rounded-lg border-l-2 border-primary">

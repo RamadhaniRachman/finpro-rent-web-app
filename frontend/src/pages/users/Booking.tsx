@@ -166,7 +166,7 @@ export default function OrderHistory() {
                   <button
                     onClick={() => setDateQuery("")}
                     className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[18px] text-on-surface-variant hover:text-red-600 transition-colors bg-surface-white"
-                    title="Hapus filter tanggal"
+                    title="Clear date filter"
                   >
                     close
                   </button>
@@ -179,7 +179,7 @@ export default function OrderHistory() {
         {/* List Tampilan Kartu */}
         {isLoading ? (
           <div className="text-center py-12 text-on-surface-variant font-body">
-            Memuat riwayat pesanan...
+            Loading booking history...
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -205,7 +205,7 @@ export default function OrderHistory() {
                     subtitle={
                       order.room_unit?.room_type?.name || "Standard Room"
                     }
-                    date={`${new Date(order.check_in).toLocaleDateString("id-ID", { day: "2-digit", month: "short" })} - ${new Date(order.check_out).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}`}
+                    date={`${new Date(order.check_in).toLocaleDateString("en-US", { day: "2-digit", month: "short" })} - ${new Date(order.check_out).toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })}`}
                     orderId={order.id.substring(0, 8).toUpperCase()}
                     price={new Intl.NumberFormat("id-ID", {
                       style: "currency",
@@ -222,7 +222,7 @@ export default function OrderHistory() {
               })
             ) : (
               <div className="col-span-full text-center py-12 text-on-surface-variant">
-                Tidak ada pesanan yang cocok dengan kriteria pencarian.
+                No bookings match the search criteria.
               </div>
             )}
           </div>

@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import {
   getSalesReport,
   getPropertyCalendar,
-} from "../services/report.service.js";
+} from "../services/report/report.service.js";
 
 export const fetchSalesReport = async (req: Request, res: Response) => {
   try {
@@ -26,6 +26,7 @@ export const fetchSalesReport = async (req: Request, res: Response) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 export const fetchPropertyCalendar = async (req: Request, res: Response) => {
   try {

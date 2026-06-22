@@ -5,7 +5,7 @@ import {
   cancelBookingById,
   getAllBookings,
   getBookingsByTenant,
-} from "../services/booking.service.js";
+} from "../services/booking/booking.service.js";
 
 export const createBooking = async (
   req: Request,

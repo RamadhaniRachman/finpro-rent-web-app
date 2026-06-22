@@ -60,7 +60,7 @@ export default function PropertyCard({ id, name, city, province, property_catego
   const coverImage  = getCoverImage(room_type);
   const lowestPrice = getLowestPrice(room_type);
   const location    = `${city}, ${province}`;
-  const category    = property_category?.name ?? 'Properti';
+  const category    = property_category?.name ?? 'Property';
 
   return (
     <Link to={`/property/${id}`} className="block group">
@@ -98,13 +98,13 @@ export default function PropertyCard({ id, name, city, province, property_catego
           <div className="flex items-center justify-between mt-auto pt-3.5 border-t border-surface-high">
             <p className="font-display font-extrabold text-[20px] text-primary-container">
               {lowestPrice > 0 ? (
-                <>Rp {formatPrice(lowestPrice)} <span className="text-[13px] font-normal text-on-surface-variant font-body">/ malam</span></>
+                <>Rp {formatPrice(lowestPrice)} <span className="text-[13px] font-normal text-on-surface-variant font-body">/ night</span></>
               ) : (
-                <span className="text-[14px] font-normal text-on-surface-variant">Harga belum tersedia</span>
+                <span className="text-[14px] font-normal text-on-surface-variant">Price unavailable</span>
               )}
             </p>
             <button className="text-[13px] px-4 py-1.5 rounded-lg flex items-center gap-1 bg-secondary-container text-on-secondary-container font-semibold hover:opacity-80 transition-opacity cursor-pointer border-none">
-              Lihat <span className="material-symbols-outlined text-[16px] [font-variation-settings:'FILL'_0,'wght'_300,'GRAD'_0,'opsz'_20]">arrow_forward</span>
+              View <span className="material-symbols-outlined text-[16px] [font-variation-settings:'FILL'_0,'wght'_300,'GRAD'_0,'opsz'_20]">arrow_forward</span>
             </button>
           </div>
         </div>

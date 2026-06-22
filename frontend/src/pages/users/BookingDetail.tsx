@@ -23,7 +23,7 @@ export default function OrderDetail() {
       const response = await api.get(`/bookings/${id}`);
       setBooking(response.data.data);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Gagal memuat detail pesanan.");
+      setError(err.response?.data?.message || "Failed to load booking details.");
     } finally {
       if (showLoading) setIsLoading(false);
     }
@@ -55,13 +55,13 @@ export default function OrderDetail() {
             error
           </span>
           <p className="text-on-surface-variant">
-            {error || "Pesanan tidak ditemukan"}
+            {error || "Booking not found"}
           </p>
           <button
             onClick={() => navigate("/bookings")}
             className="px-6 py-2 bg-primary text-white rounded-lg font-bold border-none cursor-pointer"
           >
-            Kembali ke Daftar Pesanan
+            Back to Bookings
           </button>
         </div>
       </div>

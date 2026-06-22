@@ -98,8 +98,8 @@ export default function BookingManagement() {
 
   return (
     <TenantLayout
-      title="Manajemen Transaksi"
-      subtitle="Kelola reservasi dan pembayaran tamu Anda"
+      title="Transaction Management"
+      subtitle="Manage your guest reservations and payments"
     >
       <div className="max-w-[1280px] mx-auto">
         <BookingFilterBar

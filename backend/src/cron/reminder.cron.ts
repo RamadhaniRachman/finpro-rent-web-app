@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { prisma } from "../utils/prisma.js";
-import { executeSendReminder } from "../services/email.service.js"; // Import dari service-mu
+import { executeSendReminder } from "../services/email/email.service.js"; // Import dari service-mu
 
 export const initCronJobs = () => {
   cron.schedule("0 8 * * *", async () => {

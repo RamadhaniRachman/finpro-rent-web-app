@@ -113,7 +113,7 @@ export default function ExplorePage() {
         setProperties(mappedProperties);
         if (pagData) setPagination(pagData);
       } catch (err: any) {
-        setError(err.response?.data?.error ?? err.message ?? 'Gagal memuat data properti.');
+        setError(err.response?.data?.error ?? err.message ?? 'Failed to load properties.');
       } finally {
         setIsLoading(false);
       }
@@ -255,8 +255,8 @@ export default function ExplorePage() {
               <span className="material-symbols-outlined text-[56px] text-outline">search_off</span>
               <p className="text-on-surface-variant text-[15px] max-w-sm">
                 {hasFilters
-                  ? 'Tidak ada properti yang cocok dengan filter Anda. Coba ubah kata kunci atau hapus filter.'
-                  : 'Belum ada properti tersedia saat ini.'}
+                  ? 'No properties match your filters. Try adjusting your search or clearing the filters.'
+                  : 'No properties available at the moment.'}
               </p>
               {hasFilters && (
                 <button
