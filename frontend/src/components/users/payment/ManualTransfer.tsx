@@ -28,8 +28,8 @@ export default function ManualTransfer({
       const formData = new FormData();
       formData.append("bookingId", orderId);
       formData.append("amount", amount.toString());
-      formData.append("method", "MANUAL_TRANSFER");
-      formData.append("paymentProof", file); // Nama field ini harus sesuai dengan multer di backend
+      formData.append("method", "TRANSFER_BANK");
+      formData.append("image", file); // Nama field ini harus sesuai dengan multer di backend
 
       // Tembak API Upload
       await api.post("/payments/upload", formData, {
