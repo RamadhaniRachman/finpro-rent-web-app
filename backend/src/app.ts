@@ -27,6 +27,14 @@ app.use(express.json());
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 
+// Health check route untuk root URL
+app.get("/", (req, res) => {
+  res.json({ 
+    status: "success", 
+    message: "Evergreen Escapes Backend API is running perfectly!" 
+  });
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payments", paymentRoutes);
