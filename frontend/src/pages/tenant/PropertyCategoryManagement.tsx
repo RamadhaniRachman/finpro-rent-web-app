@@ -307,13 +307,7 @@ export default function PropertyCategoryManagement() {
       <div className="max-w-4xl mx-auto">
 
         {/* ── Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-display font-bold text-3xl text-on-surface">Property Categories</h1>
-            <p className="text-on-surface-variant text-[15px] mt-1">
-              Create and manage categories for your properties.
-            </p>
-          </div>
+        <div className="flex justify-end gap-4 mb-8">
           <button
             onClick={openCreateModal}
             className="flex items-center justify-center gap-2 bg-primary text-on-primary font-bold text-[14px] px-6 py-3 rounded-xl shadow-sm hover:opacity-90 hover:shadow-md transition-all cursor-pointer border-none"
@@ -383,21 +377,30 @@ export default function PropertyCategoryManagement() {
                 </div>
 
                 {/* Actions */}
-                <div className="w-40 flex justify-end gap-2">
-                  <button
-                    onClick={() => openEditModal(cat)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant text-on-surface text-[12px] font-bold hover:bg-surface-container-low transition-colors cursor-pointer bg-transparent"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">edit</span>
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteTarget(cat)}
-                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-colors cursor-pointer border-none"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">delete</span>
-                    Delete
-                  </button>
+                <div className="w-40 flex justify-end items-center gap-2">
+                  {['Apartment', 'Hotel', 'Home', 'Villa'].includes(cat.name) ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant text-[11px] font-bold uppercase tracking-wider">
+                      <span className="material-symbols-outlined text-[14px]">lock</span>
+                      Default
+                    </span>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => openEditModal(cat)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-outline-variant text-on-surface text-[12px] font-bold hover:bg-surface-container-low transition-colors cursor-pointer bg-transparent"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">edit</span>
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(cat)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-red-50 text-red-600 text-[12px] font-bold hover:bg-red-100 transition-colors cursor-pointer border-none"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        Delete
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}

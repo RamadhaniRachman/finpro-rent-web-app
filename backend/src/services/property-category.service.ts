@@ -12,36 +12,71 @@ export const getCategoriesByTenant = async (tenantId: string): Promise<CategoryR
   const existing = await prisma.property_category.findMany({
     where: { tenant_id: tenantId },
     include: {
-      _count: { select: { property: true } },
+      _count: { 
+        select: { 
+          property: {
+            where: { deleted_at: null }
+          } 
+        } 
+      },
     },
     orderBy: { name: 'asc' },
   });
 
-  // 1. CLEANUP DUPLICATES (Handling React Strict Mode race conditions)
-  const seenNames = new Set<string>();
-  const toDelete: string[] = [];
-  const uniqueExisting: CategoryResult[] = [];
-
+  // 1. ROBUST DEDUPLICATION (Merge properties of duplicate categories)
+  const grouped: Record<string, CategoryResult[]> = {};
   for (const cat of existing) {
     const lower = cat.name.toLowerCase();
-    if (seenNames.has(lower)) {
-      // Only delete if it has no properties attached
-      if (cat._count?.property === 0) {
-        toDelete.push(cat.id);
-      }
+    if (!grouped[lower]) grouped[lower] = [];
+    grouped[lower].push(cat);
+  }
+
+  const uniqueExisting: CategoryResult[] = [];
+  const toDelete: string[] = [];
+  const merges: { from: string; to: string }[] = [];
+
+  for (const [_, cats] of Object.entries(grouped)) {
+    if (cats.length === 1) {
+      uniqueExisting.push(cats[0]);
     } else {
-      seenNames.add(lower);
-      uniqueExisting.push(cat);
+      // Sort by count descending so we keep the most populated one
+      cats.sort((a, b) => (b._count?.property || 0) - (a._count?.property || 0));
+      const keep = cats[0];
+      
+      let mergedCount = keep._count?.property || 0;
+      
+      for (let i = 1; i < cats.length; i++) {
+        const dup = cats[i];
+        if (dup._count?.property && dup._count.property > 0) {
+          merges.push({ from: dup.id, to: keep.id });
+          mergedCount += dup._count.property;
+        }
+        toDelete.push(dup.id);
+      }
+      
+      // Update local count for immediate return
+      if (keep._count) keep._count.property = mergedCount;
+      uniqueExisting.push(keep);
     }
   }
 
+  // Execute merges and deletions if any
+  if (merges.length > 0) {
+    for (const m of merges) {
+      await prisma.property.updateMany({
+        where: { category_id: m.from },
+        data: { category_id: m.to }
+      });
+    }
+  }
+  
   if (toDelete.length > 0) {
     await prisma.property_category.deleteMany({
       where: { id: { in: toDelete } }
     });
   }
 
-  // 2. AUTO-SEED: Pastikan 4 kategori standar selalu ada.
+  // 2. AUTO-SEED: Ensure standard categories exist
   const defaults = ['Home', 'Hotel', 'Villa', 'Apartment'];
   const existingNames = uniqueExisting.map(c => c.name.toLowerCase());
   const missingDefaults = defaults.filter(d => !existingNames.includes(d.toLowerCase()));
@@ -52,13 +87,19 @@ export const getCategoriesByTenant = async (tenantId: string): Promise<CategoryR
         data: missingDefaults.map(name => ({ tenant_id: tenantId, name }))
       });
     } catch (e) {
-      // Ignore concurrent insert errors if any
+      // Ignore concurrent insert errors
     }
     
-    // Fetch ulang setelah di-seed (and auto-deduplicate via logic above on next fetch if needed)
+    // Fetch again if seeded
     return prisma.property_category.findMany({
       where: { tenant_id: tenantId, id: { notIn: toDelete } },
-      include: { _count: { select: { property: true } } },
+      include: { 
+        _count: { 
+          select: { 
+            property: { where: { deleted_at: null } } 
+          } 
+        } 
+      },
       orderBy: { name: 'asc' },
     });
   }

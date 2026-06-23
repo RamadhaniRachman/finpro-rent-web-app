@@ -47,11 +47,7 @@ export default function PropertyListPage() {
     <TenantLayout title="My Properties" subtitle="Manage your properties, rooms, and dynamic pricing">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-display font-bold text-3xl text-on-surface">My Properties</h1>
-            <p className="text-on-surface-variant text-[15px] mt-1">Manage your properties, rooms, and dynamic pricing.</p>
-          </div>
+        <div className="flex justify-end gap-4 mb-8">
           <button
             onClick={() => navigate('/tenant/properties/create')}
             className="flex items-center justify-center gap-2 bg-primary text-on-primary font-bold text-[14px] px-6 py-3 rounded-xl shadow-sm hover:opacity-90 hover:shadow-md transition-all cursor-pointer border-none"

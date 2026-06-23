@@ -93,6 +93,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signOut(auth).catch((error) => console.error("Firebase logout failed:", error));
   };
 
+  // ============================================================
+  // AUTO LOGOUT (IDLE TIMEOUT) - 1 JAM (3.600.000 ms)
+  // ============================================================
+  useEffect(() => {
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        if (user) {
+          console.log('Session expired due to inactivity (1 minute).');
+          await logout();
+          // Use alert to notify the user why they were logged out automatically
+          alert('Your session has automatically expired due to 30 minutes of inactivity.');
+          window.location.href = '/login';
+        }
+      }, 1800000); // 30 menit
+    };
+
+    // Daftar event yang dianggap sebagai "aktivitas pengguna"
+    const events = ['mousemove', 'keydown', 'mousedown', 'scroll', 'touchstart'];
+
+    // Hanya jalankan sensor pendeteksi jika ada user yang login
+    if (user) {
+      resetTimer();
+      events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
+    }
+
+    // Bersihkan event listener saat komponen dihancurkan / user berubah
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, [user]); // Effect ini dipicu setiap kali status 'user' berubah
+
   return (
     <AuthContext.Provider value={{ user, isLoading, login, logout }}>
       {children}
