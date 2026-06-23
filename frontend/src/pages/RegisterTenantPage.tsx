@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SocialLogin from '../components/auth/SocialLogin';
 import Navbar from '../components/layout/Navbar';
+import api from '../api/axiosConfig';
 
 
 const INPUT_CLS = 'w-full pl-11 pr-4 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary transition-all disabled:opacity-60';
@@ -75,15 +76,10 @@ export default function RegisterTenantPage() {
     if (!form.name.trim() || !form.email.trim()) return setError('Name and email are required.');
     setLoading(true); setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/auth/register/tenant', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: form.name.trim(), email: form.email.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'An error occurred.');
-      if (data.token) navigate(`/verify/${data.token}`);
+      const res = await api.post('/auth/register/tenant', { name: form.name.trim(), email: form.email.trim() });
+      if (res.data.token) navigate(`/verify/${res.data.token}`);
       else setSuccess('Success! Please check your email.');
-    } catch (err: any) { setError(err.message); }
+    } catch (err: any) { setError(err.response?.data?.error || err.message); }
     finally { setLoading(false); }
   };
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../api/axiosConfig';
 
 const INPUT_CLS =
   'w-full pl-11 pr-4 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60';
@@ -19,19 +20,12 @@ export default function ForgotPassword() {
     setIsError(false);
 
     try {
-      const res  = await fetch('http://localhost:8000/api/auth/reset-password', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email: email.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal mengirim permintaan.');
-
+      await api.post('/auth/reset-password', { email: email.trim() });
       // Always show a safe generic message (security best practice)
       setMessage('Jika email Anda terdaftar, link reset password telah dikirim. Silakan cek inbox Anda.');
     } catch (err: any) {
       setIsError(true);
-      setMessage(err.message || 'Terjadi kesalahan. Silakan coba lagi.');
+      setMessage(err.response?.data?.error || err.message || 'Terjadi kesalahan. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }

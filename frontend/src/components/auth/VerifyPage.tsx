@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import api from '../../api/axiosConfig';
 
 const INPUT_CLS = 'w-full pl-11 pr-11 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60';
 const LABEL_CLS = 'block text-[12px] font-bold uppercase tracking-wider text-on-surface-variant mb-2';
@@ -72,12 +73,10 @@ export default function VerifyPage() {
     if (!token)                                  return setError('Invalid verification token.');
     setLoading(true); setError('');
     try {
-      const res  = await fetch('http://localhost:8000/api/auth/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token, password: form.password }) });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Verification failed.');
+      const res  = await api.post('/auth/verify', { token, password: form.password });
       setSuccess(true);
     } catch (err: any) {
-      let msg = err.message;
+      let msg = err.response?.data?.error || err.message;
       if (msg.includes('Token tidak valid'))         msg = 'Invalid token.';
       if (msg.includes('User tidak ditemukan'))      msg = 'User not found.';
       if (msg.includes('Akun sudah terverifikasi'))  msg = 'Account already verified.';

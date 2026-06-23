@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import NavDropdown from "./NavDropdown";
 import Toast from "./Toast";
 import MobileMenu from "./MobileMenu";
+import api from "../../api/axiosConfig";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -31,12 +32,9 @@ export default function Navbar() {
   // Sync avatar
   useEffect(() => {
     if (!user?.token) return;
-    fetch("http://localhost:8000/api/users/profile", {
-      headers: { Authorization: `Bearer ${user.token}` },
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        const url = d?.data?.avatar_url ?? null;
+    api.get("/users/profile")
+      .then((res) => {
+        const url = res.data?.data?.avatar_url ?? null;
         setAvatarUrl(url);
         if (url !== user.avatar_url) login({ ...user, avatar_url: url });
       })

@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { getImageUrl } from '../../../utils/imageUrl';
 import type { DashboardStats } from "../../../pages/tenant/Dashboard";
 
 interface Props {
@@ -27,7 +29,7 @@ export default function UpcomingCheckins({
             >
               {item.img ? (
                 <img
-                  src={item.img.startsWith("http") ? item.img : `http://localhost:8000/${item.img.replace(/\\/g, "/")}`}
+                  src={getImageUrl(item.img)}
                   alt={item.name}
                   className="w-full h-full object-cover"
                   onError={(e) => {

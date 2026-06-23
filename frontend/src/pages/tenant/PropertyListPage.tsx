@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import PropertyDeleteModal from './PropertyDeleteModal';
+import { getImageUrl } from '../../utils/imageUrl';
 import { useAuth } from '../../context/AuthContext';
 import TenantLayout from '../../components/layout/TenantLayout';
 import api from '../../api/axiosConfig';
@@ -85,12 +87,11 @@ export default function PropertyListPage() {
                 <div className="h-48 bg-surface-container-high relative flex-shrink-0 overflow-hidden">
                   {p.image_urls && p.image_urls.length > 0 ? (
                     <img 
-                      src={`http://localhost:8000/${p.image_urls[0].replace(/\\/g, '/')}`} 
+                      src={getImageUrl(p.image_urls[0])} 
                       alt={p.name} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        if (p.image_urls[0].startsWith('http')) (e.target as HTMLImageElement).src = p.image_urls[0];
-                        else (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Property';
+                        (e.target as HTMLImageElement).src = 'https://placehold.co/400x300?text=Property';
                       }}
                     />
                   ) : (

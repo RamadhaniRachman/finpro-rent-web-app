@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import api from '../api/axiosConfig';
 
 const INPUT_CLS =
   'w-full pl-11 pr-12 py-3.5 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60';
@@ -39,14 +40,8 @@ export default function ResetPassword() {
     setIsError(false);
 
     try {
-      const res  = await fetch('http://localhost:8000/api/auth/confirm-reset', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ token, newPassword: password }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Gagal mereset password.');
-
+      await api.post('/auth/confirm-reset', { token, newPassword: password });
+      
       setIsDone(true);
       setIsError(false);
       setMessage('Password berhasil direset! Anda akan diarahkan ke halaman login...');

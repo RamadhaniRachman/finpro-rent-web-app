@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useInputLimit } from '../../hooks/useInputLimit';
+import { getImageUrl } from '../../utils/imageUrl';
 
 const INPUT = 'w-full px-4 py-2.5 bg-surface-low border border-outline-variant rounded-xl text-[14px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all';
 
@@ -145,7 +146,7 @@ export default function EditRoomTypeModal({ roomType, onSuccess, onClose }: Prop
                 {/* Existing Images */}
                 {existingImages.map((url, i) => (
                   <div key={`old-${i}`} className="w-20 h-20 shrink-0 rounded-xl overflow-hidden border border-outline-variant relative group">
-                    <img src={`http://localhost:8000/${url.replace(/\\/g, '/')}`} alt={`Old ${i}`} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(url)} alt={`Old ${i}`} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                     <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[9px] font-bold text-center py-0.5">OLD</div>
                     <button 

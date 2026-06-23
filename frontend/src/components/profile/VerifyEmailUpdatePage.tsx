@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-
-const API = 'http://localhost:8000/api/auth/verify-email-update';
+import api from '../../api/axiosConfig';
 
 type Status = 'loading' | 'success' | 'error';
 
@@ -75,21 +74,16 @@ export default function VerifyEmailUpdatePage() {
   useEffect(() => {
     if (!token) { setStatus('error'); setErrorMsg('Invalid link.'); return; }
 
-    fetch(API, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ token }),
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.message) {
+    api.post('/auth/verify-email-update', { token })
+      .then((res) => {
+        if (res.data.message) {
           setStatus('success');
           setTimeout(() => navigate('/profile'), 2500);
         } else {
-          throw new Error(d.error || 'Verification failed.');
+          throw new Error(res.data.error || 'Verification failed.');
         }
       })
-      .catch((err) => { setStatus('error'); setErrorMsg(err.message); });
+      .catch((err) => { setStatus('error'); setErrorMsg(err.response?.data?.error || err.message); });
   }, [token]);
 
   return (

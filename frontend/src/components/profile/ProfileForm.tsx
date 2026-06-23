@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-
-const API = 'http://localhost:8000/api/users';
+import api from '../../api/axiosConfig';
 
 const INPUT_CLS =
   'w-full px-4 py-3 bg-surface border border-outline-variant rounded-xl text-[15px] text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all disabled:opacity-60';
@@ -25,19 +24,13 @@ export default function ProfileForm({ initialName, initialPhone, onSuccess }: Pr
     setLoading(true);
     setMsg('');
     try {
-      const res  = await fetch(`${API}/profile`, {
-        method:  'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body:    JSON.stringify({ name: name.trim(), phone: phone.trim() }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      await api.patch('/users/profile', { name: name.trim(), phone: phone.trim() });
       setIsError(false);
       setMsg('Profile updated successfully!');
       onSuccess(name.trim(), phone.trim());
     } catch (err: any) {
       setIsError(true);
-      setMsg(err.message || 'Something went wrong.');
+      setMsg(err.response?.data?.error || err.message || 'Something went wrong.');
     } finally {
       setLoading(false);
     }

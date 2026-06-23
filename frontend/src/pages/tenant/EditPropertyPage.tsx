@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import TenantLayout from '../../components/layout/TenantLayout';
 import api from '../../api/axiosConfig';
+import { getImageUrl } from '../../utils/imageUrl';
 
 const INITIAL = { name: '', description: '', address: '', city: '', province: '', category_id: '' };
 
@@ -213,9 +214,8 @@ export default function EditPropertyPage() {
                     {/* Render Existing Images */}
                     {existingImages.map((url, i) => (
                       <div key={`existing-${i}`} className="w-24 h-24 shrink-0 rounded-xl overflow-hidden border-2 border-transparent hover:border-error/50 relative group transition-all">
-                        <img src={`http://localhost:8000/${url.replace(/\\/g, '/')}`} alt={`Property ${i}`} className="w-full h-full object-cover" onError={(e) => {
-                          if (url.startsWith('http')) (e.target as HTMLImageElement).src = url;
-                          else (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Image';
+                        <img src={getImageUrl(url)} alt={`Property ${i}`} className="w-full h-full object-cover" onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://placehold.co/100x100?text=Image';
                         }} />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                         <button 

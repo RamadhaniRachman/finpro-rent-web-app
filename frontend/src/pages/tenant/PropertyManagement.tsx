@@ -4,8 +4,7 @@ import CreatePropertyModal      from '../../components/tenant/CreatePropertyModa
 import SetPriceModifierModal    from '../../components/tenant/SetPriceModifierModal';
 import CreateRoomTypeModal      from '../../components/tenant/CreateRoomTypeModal';
 
-const API = 'http://localhost:8000/api/properties';
-
+import api from '../../api/axiosConfig';
 interface RoomType  { id: string; name: string; price_per_night: number; }
 interface Property  { id: string; name: string; city: string; province: string; address: string; room_type: RoomType[]; }
 
@@ -67,9 +66,8 @@ export default function PropertyManagement() {
   const fetchProperties = async () => {
     setLoading(true);
     try {
-      const res  = await fetch(`${API}/my`, { headers: { Authorization: `Bearer ${user?.token}` } });
-      const data = await res.json();
-      if (data.data) setProperties(data.data);
+      const res = await api.get('/properties/my');
+      if (res.data.data) setProperties(res.data.data);
     } finally { setLoading(false); }
   };
 
@@ -77,7 +75,7 @@ export default function PropertyManagement() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus properti ini?')) return;
-    await fetch(`${API}/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${user?.token}` } });
+    await api.delete(`/properties/${id}`);
     fetchProperties();
   };
 
