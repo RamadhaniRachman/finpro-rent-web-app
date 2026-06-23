@@ -14,23 +14,32 @@ export const getCategoriesByTenant = async (
   const existing = await prisma.property_category.findMany({
     where: { tenant_id: tenantId },
     include: {
-      _count: { select: { property: true } },
+      _count: { 
+        select: { 
+          property: {
+            where: { deleted_at: null }
+          } 
+        } 
+      },
     },
     orderBy: { name: "asc" },
   });
 
-  // 1. CLEANUP DUPLICATES (Handling React Strict Mode race conditions)
-  const seenNames = new Set<string>();
-  const toDelete: string[] = [];
-  const uniqueExisting: CategoryResult[] = [];
-
+  // 1. ROBUST DEDUPLICATION (Merge properties of duplicate categories)
+  const grouped: Record<string, CategoryResult[]> = {};
   for (const cat of existing) {
     const lower = cat.name.toLowerCase();
-    if (seenNames.has(lower)) {
-      // Only delete if it has no properties attached
-      if (cat._count?.property === 0) {
-        toDelete.push(cat.id);
-      }
+    if (!grouped[lower]) grouped[lower] = [];
+    grouped[lower].push(cat);
+  }
+
+  const uniqueExisting: CategoryResult[] = [];
+  const toDelete: string[] = [];
+  const merges: { from: string; to: string }[] = [];
+
+  for (const [_, cats] of Object.entries(grouped)) {
+    if (cats.length === 1) {
+      uniqueExisting.push(cats[0]);
     } else {
       seenNames.add(lower);
 
@@ -40,6 +49,16 @@ export const getCategoriesByTenant = async (
     }
   }
 
+  // Execute merges and deletions if any
+  if (merges.length > 0) {
+    for (const m of merges) {
+      await prisma.property.updateMany({
+        where: { category_id: m.from },
+        data: { category_id: m.to }
+      });
+    }
+  }
+  
   if (toDelete.length > 0) {
     await prisma.property_category.deleteMany({
       where: { id: { in: toDelete } },
@@ -59,7 +78,7 @@ export const getCategoriesByTenant = async (
         data: missingDefaults.map((name) => ({ tenant_id: tenantId, name })),
       });
     } catch (e) {
-      // Ignore concurrent insert errors if any
+      // Ignore concurrent insert errors
     }
 
     // Fetch ulang setelah di-seed (and auto-deduplicate via logic above on next fetch if needed)

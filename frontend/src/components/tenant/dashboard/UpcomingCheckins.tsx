@@ -23,13 +23,28 @@ export default function UpcomingCheckins({
             className="flex items-center gap-4 p-3 rounded-2xl hover:bg-surface-container-low transition-all cursor-pointer border border-transparent hover:border-outline-variant"
           >
             <div
-              className={`w-12 h-12 rounded-full overflow-hidden shrink-0 ${item.bg}`}
+              className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-on-surface font-bold text-lg overflow-hidden ${item.bg}`}
             >
-              <img
-                src={item.img}
-                alt={item.name}
-                className="w-full h-full object-cover"
-              />
+              {item.img ? (
+                <img
+                  src={item.img.startsWith("http") ? item.img : `http://localhost:8000/${item.img.replace(/\\/g, "/")}`}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    if (e.currentTarget.nextElementSibling) {
+                      (e.currentTarget.nextElementSibling as HTMLElement).style.display = "block";
+                    }
+                  }}
+                />
+              ) : null}
+              {/* Fallback icon if image fails or is missing */}
+              <span 
+                className="material-symbols-outlined text-[24px]" 
+                style={{ display: item.img ? "none" : "block" }}
+              >
+                person
+              </span>
             </div>
             <div className="flex-grow">
               <p className="text-on-surface font-bold text-sm">{item.name}</p>
