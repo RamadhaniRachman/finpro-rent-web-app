@@ -16,16 +16,44 @@ import reportRoutes from "./routes/report.route.js";
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ============================================================
+// CORS CONFIGURATION
+// ============================================================
+const rawOrigins = process.env.FRONTEND_URL || "http://localhost:5173,http://localhost:5174";
+const allowedOrigins = rawOrigins.split(",").map((o) => o.trim().replace(/\/$/, ""));
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Izinkan request tanpa Origin (Vercel Proxy / Postman / server-to-server)
+      if (!origin) return callback(null, true);
+
+      const cleanOrigin = origin.replace(/\/$/, "");
+      if (allowedOrigins.includes(cleanOrigin)) {
+        callback(null, true);
+      } else {
+        console.warn(`[CORS] Blocked: ${origin} | Allowed: ${allowedOrigins.join(", ")}`);
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    exposedHeaders: ["Set-Cookie"],
   }),
 );
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
+
+// Health check route untuk root URL
+app.get("/", (req, res) => {
+  res.json({ 
+    status: "success", 
+    message: "Evergreen Escapes Backend API is running perfectly!" 
+  });
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);

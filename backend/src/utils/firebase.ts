@@ -9,20 +9,33 @@ const getAdminApp = () => {
   if (admin.apps.length > 0) return admin.apps[0]!;
 
   let rawEnv = process.env.FIREBASE_SERVICE_ACCOUNT;
+
   if (!rawEnv || rawEnv.trim() === '') {
     throw new Error(
-      'FIREBASE_SERVICE_ACCOUNT is not set in .env. ' +
-      'Please add your Firebase service account JSON to enable social login.',
+      'FIREBASE_SERVICE_ACCOUNT is not set. Please add your Firebase service account JSON to Vercel environment variables.',
     );
   }
 
-  // Strip wrapping single/double quotes that dotenv may preserve
-  rawEnv = rawEnv.replace(/^['"]|['"]$/g, '');
+  // Hapus outer single/double quotes yang mungkin ikut ter-copy dari .env
+  rawEnv = rawEnv.trim().replace(/^['"`]|['"`]$/g, '').trim();
+  // CATATAN: Jangan lakukan replace(\n) di sini.
+  // JSON.parse sudah menangani escape sequence \n dengan benar secara otomatis.
 
-  const serviceAccount = JSON.parse(rawEnv);
+  let serviceAccount: object;
+  try {
+    serviceAccount = JSON.parse(rawEnv);
+  } catch (parseError: any) {
+    console.error('[Firebase] Failed to parse FIREBASE_SERVICE_ACCOUNT JSON.');
+    console.error('[Firebase] First 100 chars of raw value:', rawEnv.substring(0, 100));
+    throw new Error(
+      `FIREBASE_SERVICE_ACCOUNT is not valid JSON. Parse error: ${parseError.message}. ` +
+      'Make sure you paste the raw JSON content WITHOUT surrounding quotes in Vercel environment variables.',
+    );
+  }
 
+  console.log('[Firebase] Admin SDK initializing...');
   return admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   });
 };
 
@@ -31,13 +44,18 @@ const getAdminApp = () => {
  * Returns decoded token payload (uid, email, name, picture).
  */
 export const verifyFirebaseToken = async (idToken: string) => {
-  const app     = getAdminApp();
-  const decoded = await app.auth().verifyIdToken(idToken);
+  try {
+    const app     = getAdminApp();
+    const decoded = await app.auth().verifyIdToken(idToken);
 
-  return {
-    uid:     decoded.uid,
-    email:   decoded.email ?? '',
-    name:    decoded.name  ?? decoded.email?.split('@')[0] ?? 'User',
-    picture: decoded.picture,
-  };
+    return {
+      uid:     decoded.uid,
+      email:   decoded.email ?? '',
+      name:    decoded.name  ?? decoded.email?.split('@')[0] ?? 'User',
+      picture: decoded.picture,
+    };
+  } catch (err: any) {
+    console.error('[Firebase] verifyFirebaseToken error:', err.message);
+    throw err;
+  }
 };
