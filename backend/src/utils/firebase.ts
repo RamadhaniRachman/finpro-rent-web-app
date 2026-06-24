@@ -16,12 +16,10 @@ const getAdminApp = () => {
     );
   }
 
-  // 1. Hapus outer single/double quotes yang mungkin ikut ter-copy dari .env
+  // Hapus outer single/double quotes yang mungkin ikut ter-copy dari .env
   rawEnv = rawEnv.trim().replace(/^['"`]|['"`]$/g, '').trim();
-
-  // 2. Perbaiki escaped newline di private_key yang sering rusak saat copy-paste
-  //    Vercel kadang tidak mempertahankan literal \n di dalam nilai env variable
-  rawEnv = rawEnv.replace(/\\n/g, '\n');
+  // CATATAN: Jangan lakukan replace(\n) di sini.
+  // JSON.parse sudah menangani escape sequence \n dengan benar secara otomatis.
 
   let serviceAccount: object;
   try {
@@ -31,7 +29,7 @@ const getAdminApp = () => {
     console.error('[Firebase] First 100 chars of raw value:', rawEnv.substring(0, 100));
     throw new Error(
       `FIREBASE_SERVICE_ACCOUNT is not valid JSON. Parse error: ${parseError.message}. ` +
-      'Make sure you paste the JSON content WITHOUT surrounding quotes in Vercel environment variables.',
+      'Make sure you paste the raw JSON content WITHOUT surrounding quotes in Vercel environment variables.',
     );
   }
 
