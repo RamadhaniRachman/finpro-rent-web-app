@@ -1,14 +1,21 @@
 import { prisma } from "../../utils/prisma.js";
 import { APP_URL, logMockEmail, sendMailWrapper } from "./email.config.js";
 
-const formatDate = (date: Date) => new Date(date).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+const formatDate = (date: Date) =>
+  new Date(date).toLocaleDateString("id-ID", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
 export const sendConfirmationEmail = async (to: string, bookingData: any) => {
-  const propName = bookingData.room_unit?.room_type?.property?.name || "Properti Kami";
+  const propName =
+    bookingData.room_unit?.room_type?.property?.name || "Properti Kami";
   const inDate = formatDate(bookingData.check_in);
   const outDate = formatDate(bookingData.check_out);
   const subject = `Pembayaran Berhasil! Booking di ${propName} Telah Dikonfirmasi`;
-  
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #061b0e;">Pembayaran Dikonfirmasi ✅</h2>
@@ -30,15 +37,28 @@ export const sendConfirmationEmail = async (to: string, bookingData: any) => {
   if (!sent) logMockEmail("Booking Confirmation", to, { Subjek: subject });
 };
 
-export const executeSendReminder = async (bookingId: string): Promise<boolean> => {
+export const executeSendReminder = async (
+  bookingId: string,
+): Promise<boolean> => {
   const booking = await prisma.booking.findUnique({
-    where: { id: bookingId }, include: { users: true, room_unit: { include: { room_type: { include: { property: true } } } } },
+    where: { id: bookingId },
+    include: {
+      users: true,
+      room_unit: { include: { room_type: { include: { property: true } } } },
+    },
   });
 
-  if (!booking || booking.status !== "CONFIRMED" || !booking.users?.email || booking.is_reminder_sent) return false;
+  if (
+    !booking ||
+    booking.status !== "CONFIRMED" ||
+    !booking.users?.email ||
+    booking.is_reminder_sent
+  )
+    return false;
 
   const to = booking.users.email;
-  const propName = booking.room_unit?.room_type?.property?.name || "Properti Kami";
+  const propName =
+    booking.room_unit?.room_type?.property?.name || "Properti Kami";
   const checkInDate = formatDate(booking.check_in);
   const subject = `Pengingat: Besok Waktunya Check-in di ${propName}!`;
 
@@ -57,6 +77,71 @@ export const executeSendReminder = async (bookingId: string): Promise<boolean> =
   const sent = await sendMailWrapper(to, subject, html);
   if (!sent) logMockEmail("H-1 Reminder", to, { Subjek: subject });
 
-  await prisma.booking.update({ where: { id: bookingId }, data: { is_reminder_sent: true } });
+  await prisma.booking.update({
+    where: { id: bookingId },
+    data: { is_reminder_sent: true },
+  });
   return true;
+};
+
+export const sendCancellationEmail = async (to: string, bookingData: any) => {
+  const propName =
+    bookingData.room_unit?.room_type?.property?.name || "Properti Kami";
+  const inDate = formatDate(bookingData.check_in);
+  const outDate = formatDate(bookingData.check_out);
+  const subject = `Pesanan Dibatalkan: Booking di ${propName}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+      <h2 style="color: #b91c1c; text-align: center;">Pesanan Dibatalkan ❌</h2>
+      <p>Halo <strong>${bookingData.users?.name || "Guest"}</strong>,</p>
+      <p>Mohon maaf, pesanan Anda di <strong>${propName}</strong> terpaksa dibatalkan atau ditolak oleh pihak pengelola properti.</p>
+      
+      <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ef4444;">
+        <h3 style="margin-top: 0; color: #991b1b;">Detail Pesanan yang Dibatalkan:</h3>
+        <p><strong>Properti:</strong> ${propName}</p>
+        <p><strong>Tipe Kamar:</strong> ${bookingData.room_unit?.room_type?.name || "-"}</p>
+        <p><strong>Check-in:</strong> ${inDate}</p>
+        <p><strong>Check-out:</strong> ${outDate}</p>
+      </div>
+
+      <p>Jika Anda sudah terlanjur melakukan transfer manual, pihak properti atau admin kami akan segera memproses pengembalian dana (<em>refund</em>).</p>
+      <p>Jangan berkecil hati! Masih banyak properti menarik lainnya yang siap menyambut liburan Anda.</p>
+      
+      <p style="text-align: center; margin-top: 30px;">
+        <a href="${APP_URL}" style="padding: 12px 24px; background-color: #061b0e; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Cari Properti Lain</a>
+      </p>
+    </div>
+  `;
+
+  const sent = await sendMailWrapper(to, subject, html);
+  if (!sent)
+    logMockEmail("Booking Canceled by Tenant", to, { Subjek: subject });
+};
+
+export const sendRejectionEmail = async (to: string, bookingData: any) => {
+  const propName =
+    bookingData.room_unit?.room_type?.property?.name || "Properti Kami";
+  const subject = `Bukti Pembayaran Ditolak: Pesanan di ${propName}`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+      <h2 style="color: #ea580c; text-align: center;">Pembayaran Ditolak ⚠️</h2>
+      <p>Halo <strong>${bookingData.users?.name || "Guest"}</strong>,</p>
+      <p>Mohon maaf, bukti pembayaran yang Anda unggah untuk pesanan di <strong>${propName}</strong> telah ditolak oleh pihak pengelola properti.</p>
+      
+      <div style="background-color: #fff7ed; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
+        <p style="margin: 0; color: #9a3412;">Status pesanan Anda kini kembali menjadi <strong>Menunggu Pembayaran</strong>.</p>
+        <p style="margin-top: 10px; margin-bottom: 0; color: #9a3412; font-size: 14px;">Hal ini biasanya terjadi karena foto bukti transfer buram, nominal tidak sesuai, atau gambar terpotong. Silakan unggah ulang bukti yang valid sebelum batas waktu habis.</p>
+      </div>
+      
+      <p style="text-align: center; margin-top: 30px;">
+        <a href="${APP_URL}/bookings" style="padding: 12px 24px; background-color: #061b0e; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">Unggah Ulang Bukti</a>
+      </p>
+    </div>
+  `;
+
+  const sent = await sendMailWrapper(to, subject, html);
+  if (!sent)
+    logMockEmail("Payment Rejected by Tenant", to, { Subjek: subject });
 };

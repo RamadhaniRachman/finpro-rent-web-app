@@ -1,11 +1,14 @@
 import { prisma } from "../utils/prisma.js";
 import type { TransactionContext, PaymentItem } from "../types/tenant.type.js";
+import {
+  sendConfirmationEmail,
+  sendCancellationEmail,
+  sendRejectionEmail,
+} from "./email/email.service.js";
 
 export const getTenantByUserId = async (userId: string) => {
   return await prisma.tenant.findUnique({ where: { user_id: userId } });
 };
-// Asumsi kamu sudah punya layanan email, kita panggil di sini
-import { sendConfirmationEmail } from "./email/email.service.js";
 
 // Helper untuk mengecek kepemilikan tenant
 export const verifyTenantOwnership = async (
@@ -30,7 +33,6 @@ export const verifyTenantOwnership = async (
 // 1. Tenant Menerima Pembayaran Manual
 export const approvePaymentProcess = async (bookingId: string) => {
   const result = await prisma.$transaction(async (tx: TransactionContext) => {
-    // Ubah status booking menjadi CONFIRMED
     const updatedBooking = await tx.booking.update({
       where: { id: bookingId },
       data: { status: "CONFIRMED" },
@@ -40,7 +42,6 @@ export const approvePaymentProcess = async (bookingId: string) => {
       },
     });
 
-    // Ubah status tabel payment menjadi CONFIRMED
     await tx.payment.updateMany({
       where: { booking_id: bookingId, status: "SUBMITTED" },
       data: { status: "CONFIRMED", confirmed_at: new Date() },
@@ -49,12 +50,8 @@ export const approvePaymentProcess = async (bookingId: string) => {
     return updatedBooking;
   });
 
-  // 📧 Eksekusi Poin: Kirim email notifikasi & tata cara setelah dikonfirmasi
   if (result) {
-    await sendConfirmationEmail(
-      result.users.email,
-      result, // Kirim data booking untuk dirender di template email
-    );
+    await sendConfirmationEmail(result.users.email, result);
   }
 
   return result;
@@ -62,11 +59,15 @@ export const approvePaymentProcess = async (bookingId: string) => {
 
 // 2. Tenant Menolak Pembayaran Manual
 export const rejectPaymentProcess = async (bookingId: string) => {
-  return await prisma.$transaction(async (tx: TransactionContext) => {
-    // Kembalikan status booking ke WAITING_FOR_PAYMENT
+  const result = await prisma.$transaction(async (tx: TransactionContext) => {
+    // Kembalikan status booking ke WAITING_FOR_PAYMENT dan ambil data relasinya
     const updatedBooking = await tx.booking.update({
       where: { id: bookingId },
       data: { status: "WAITING_FOR_PAYMENT" },
+      include: {
+        users: true,
+        room_unit: { include: { room_type: { include: { property: true } } } },
+      },
     });
 
     // Tandai bukti transfer yang diunggah sebelumnya sebagai REJECTED
@@ -77,9 +78,16 @@ export const rejectPaymentProcess = async (bookingId: string) => {
 
     return updatedBooking;
   });
+
+  // 📧 Eksekusi Poin: Kirim email penolakan pembayaran ke User
+  if (result && result.users?.email) {
+    await sendRejectionEmail(result.users.email, result);
+  }
+
+  return result;
 };
 
-// 3. Tenant Membatalkan Pesanan Secara Sepihak
+// 3. Tenant Membatalkan Pesanan Secara Sepihak (SUDAH DIPERBARUI)
 export const cancelBookingByTenantProcess = async (bookingId: string) => {
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
@@ -88,8 +96,6 @@ export const cancelBookingByTenantProcess = async (bookingId: string) => {
 
   if (!booking) throw new Error("Pesanan tidak ditemukan");
 
-  // 🚨 Eksekusi Poin: Hanya bisa dibatalkan jika bukti pembayaran BELUM diunggah
-  // (Asumsi: jika ada payment dengan status SUBMITTED/CONFIRMED, berarti tidak boleh dibatalkan)
   const hasUploadedPayment = booking.payment.some(
     (p: PaymentItem) => p.status === "SUBMITTED" || p.status === "CONFIRMED",
   );
@@ -100,10 +106,24 @@ export const cancelBookingByTenantProcess = async (bookingId: string) => {
     );
   }
 
-  return await prisma.booking.update({
+  // Lakukan update SEKALIGUS mengambil data relasi untuk email
+  const updatedBooking = await prisma.booking.update({
     where: { id: bookingId },
     data: { status: "CANCELED" },
+    include: {
+      users: true,
+      room_unit: {
+        include: { room_type: { include: { property: true } } },
+      },
+    },
   });
+
+  // 📧 Eksekusi Poin: Kirim email pembatalan ke User
+  if (updatedBooking && updatedBooking.users?.email) {
+    await sendCancellationEmail(updatedBooking.users.email, updatedBooking);
+  }
+
+  return updatedBooking;
 };
 
 export const getBookingsByTenant = async (
@@ -111,28 +131,25 @@ export const getBookingsByTenant = async (
   search?: string,
   status?: string,
 ) => {
-  // 1. KUNCI UTAMA KEPEMILIKAN: Memfilter lewat relasi table dari Booking sampai ke Properti Tenant
   const whereClause: any = {
     room_unit: {
       room_type: {
         property: {
-          tenant_id: tenantId, // 👈 Catatan: Sesuaikan jika di model properti milikmu nama kolomnya 'user_id' atau 'tenantId'
+          tenant_id: tenantId,
         },
       },
     },
   };
 
-  // 2. Filter berdasarkan Status jika Tenant memilih filter tertentu (selain "Semua")
   if (status && status.trim() !== "" && status !== "Semua") {
     whereClause.status = status;
   }
 
-  // 3. Filter berdasarkan Pencarian Nama Tamu (jika ada input text)
   if (search && search.trim() !== "") {
     whereClause.users = {
       name: {
         contains: search,
-        mode: "insensitive", // Ignore huruf besar/kecil
+        mode: "insensitive",
       },
     };
   }
@@ -153,20 +170,19 @@ export const getBookingsByTenant = async (
         include: {
           room_type: {
             include: {
-              property: true, // Untuk menampilkan nama properti di tabel tenant
+              property: true,
             },
           },
         },
       },
       payment: {
         orderBy: { confirmed_at: "desc" },
-        take: 1, // Mengambil data payment terakhir untuk ditampilkan foto bukti transfernya di modal
+        take: 1,
       },
     },
   });
 };
 
-// 4. Mengambil Detail Satu Pesanan (Berdasarkan ID & Milik Tenant Tersebut)
 export const getBookingDetailByTenantProcess = async (
   bookingId: string,
   tenantId: string,
