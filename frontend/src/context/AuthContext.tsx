@@ -97,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Simpan error agar bisa ditampilkan oleh komponen SocialLogin
           const message = err.response?.data?.error ?? err.message ?? 'Social login failed.';
           sessionStorage.setItem('social_login_error', message);
+          window.dispatchEvent(new Event('social_auth_error')); // <-- Beritahu UI
           // Sign out dari Firebase jika backend gagal memvalidasi
           await signOut(auth);
         } finally {
