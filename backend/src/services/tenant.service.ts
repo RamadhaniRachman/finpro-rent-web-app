@@ -32,29 +32,51 @@ export const verifyTenantOwnership = async (
 
 // 1. Tenant Menerima Pembayaran Manual
 export const approvePaymentProcess = async (bookingId: string) => {
-  const result = await prisma.$transaction(async (tx: TransactionContext) => {
-    const updatedBooking = await tx.booking.update({
-      where: { id: bookingId },
-      data: { status: "CONFIRMED" },
-      include: {
-        users: true,
-        room_unit: { include: { room_type: { include: { property: true } } } },
-      },
+  return await prisma
+    .$transaction(async (tx: TransactionContext) => {
+      // 1. Ambil data booking
+      const booking = await tx.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          users: true,
+          room_unit: {
+            include: { room_type: { include: { property: true } } },
+          },
+        },
+      });
+
+      if (!booking) throw new Error("Pesanan tidak ditemukan.");
+
+      // 2. Gembok Validasi Tanggal Check-in
+      // Jika tanggal hari ini sudah melebihi tanggal check-in, maka tidak boleh diapprove
+      const today = new Date();
+      // Reset jam agar perbandingan hanya berdasarkan tanggal (Y-M-D)
+      today.setHours(0, 0, 0, 0);
+
+      if (booking.check_in < today) {
+        throw new Error(
+          "Tidak dapat menyetujui pesanan karena tanggal check-in sudah terlewati.",
+        );
+      }
+
+      // 3. Lanjutkan proses approval jika valid
+      const updatedBooking = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: "CONFIRMED" },
+      });
+
+      await tx.payment.updateMany({
+        where: { booking_id: bookingId, status: "SUBMITTED" },
+        data: { status: "CONFIRMED", confirmed_at: new Date() },
+      });
+
+      return booking; // Gunakan data dari fetch awal untuk email
+    })
+    .then(async (result) => {
+      // Kirim email setelah transaksi berhasil
+      await sendConfirmationEmail(result.users.email, result);
+      return result;
     });
-
-    await tx.payment.updateMany({
-      where: { booking_id: bookingId, status: "SUBMITTED" },
-      data: { status: "CONFIRMED", confirmed_at: new Date() },
-    });
-
-    return updatedBooking;
-  });
-
-  if (result) {
-    await sendConfirmationEmail(result.users.email, result);
-  }
-
-  return result;
 };
 
 // 2. Tenant Menolak Pembayaran Manual
