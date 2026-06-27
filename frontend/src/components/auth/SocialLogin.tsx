@@ -70,18 +70,25 @@ export default function SocialLogin({ action, requestedRole, redirectTo = '/' }:
     checkRedirect();
   }, []);
 
-  // ─── EFEK 2: Tangkap error dari AuthContext (via sessionStorage) ────
-  // PENTING: Dependency array [] wajib ada agar efek ini hanya berjalan
-  // SEKALI saat komponen pertama kali dimuat, bukan setiap render.
+  // ─── EFEK 2: Tangkap error dari AuthContext (via sessionStorage & Event) ────
   useEffect(() => {
-    const storedError = sessionStorage.getItem('social_login_error');
-    if (storedError) {
-      setError(storedError);
-      sessionStorage.removeItem('social_login_error');
-      setLoading(null);
-      setIsAwaitingAuth(false);
-    }
-  }, []); // ← [] WAJIB: hanya jalankan sekali saat mount
+    const checkError = () => {
+      const storedError = sessionStorage.getItem('social_login_error');
+      if (storedError) {
+        setError(storedError);
+        sessionStorage.removeItem('social_login_error');
+        setLoading(null);
+        setIsAwaitingAuth(false);
+      }
+    };
+    
+    // Cek saat pertama kali dimuat
+    checkError();
+
+    // Dengarkan event error dari AuthContext
+    window.addEventListener('social_auth_error', checkError);
+    return () => window.removeEventListener('social_auth_error', checkError);
+  }, []);
 
   // ─── EFEK 3: Navigasi setelah login berhasil ────────────────
   // Dipicu ketika 'user' di AuthContext berubah dari null → ada user (login berhasil).
