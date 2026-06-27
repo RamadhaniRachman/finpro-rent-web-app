@@ -5,7 +5,6 @@ import BookingFilterBar from "../../components/tenant/booking/BookingFilterBar";
 import BookingTable from "../../components/tenant/booking/BookingTable";
 import ConfirmPaymentModal from "../../components/tenant/booking/ConfirmPaymentModal";
 import CancelBookingModal from "../../components/tenant/booking/CancelBookingModal";
-import toast from "react-hot-toast"; // 👈 Tambahkan pustaka Toast favoritmu
 
 const FILTER_OPTIONS = [
   { label: "All", value: "All" },
@@ -36,7 +35,6 @@ export default function BookingManagement() {
       setBookings(response.data.data);
     } catch (error) {
       console.error("Gagal mengambil data booking tenant:", error);
-      toast.error("Gagal memuat daftar pesanan");
     } finally {
       setIsLoading(false);
     }
@@ -50,14 +48,11 @@ export default function BookingManagement() {
   const handleApprovePayment = async (bookingId: string) => {
     try {
       setIsProcessing(true);
-      const res = await api.patch(`/tenant/bookings/${bookingId}/approve`);
-      toast.success(res.data.message || "Pembayaran berhasil disetujui!");
+      await api.patch(`/tenant/bookings/${bookingId}/approve`);
       setShowConfirmModal(false);
       fetchTenantBookings();
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.error || "Gagal menyetujui pembayaran.",
-      );
+    } catch (error) {
+      alert("Gagal menyetujui pembayaran.");
     } finally {
       setIsProcessing(false);
     }
@@ -66,12 +61,11 @@ export default function BookingManagement() {
   const handleRejectPayment = async (bookingId: string) => {
     try {
       setIsProcessing(true);
-      const res = await api.patch(`/tenant/bookings/${bookingId}/reject`);
-      toast.success(res.data.message || "Bukti pembayaran ditolak!");
+      await api.patch(`/tenant/bookings/${bookingId}/reject`);
       setShowConfirmModal(false);
       fetchTenantBookings();
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || "Gagal menolak pembayaran.");
+    } catch (error) {
+      alert("Gagal menolak pembayaran.");
     } finally {
       setIsProcessing(false);
     }
@@ -80,12 +74,11 @@ export default function BookingManagement() {
   const handleCancelBooking = async (bookingId: string) => {
     try {
       setIsProcessing(true);
-      const res = await api.patch(`/tenant/bookings/${bookingId}/cancel`);
-      toast.success(res.data.message || "Pesanan berhasil dibatalkan!");
+      await api.patch(`/tenant/bookings/${bookingId}/cancel`);
       setShowCancelModal(false);
       fetchTenantBookings();
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || "Gagal membatalkan pesanan.");
+    } catch (error) {
+      alert("Gagal membatalkan pesanan.");
     } finally {
       setIsProcessing(false);
     }
@@ -94,12 +87,10 @@ export default function BookingManagement() {
   const handleSendReminder = async (bookingId: string) => {
     try {
       setIsProcessing(true);
-      const res = await api.post(`/tenant/bookings/${bookingId}/remind`);
-      toast.success(res.data.message || "Reminder email sent successfully!");
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.error || "Failed to send reminder email.",
-      );
+      await api.post(`/tenant/bookings/${bookingId}/remind`);
+      alert("Reminder email sent successfully!");
+    } catch (error) {
+      alert("Failed to send reminder email.");
     } finally {
       setIsProcessing(false);
     }
