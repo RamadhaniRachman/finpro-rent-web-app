@@ -10,12 +10,19 @@ export const setPriceModifier = async (userId: string, roomTypeId: string, input
   const start = new Date(input.startDate);
   const end = new Date(input.endDate);
 
-  // Mencegah pengaturan harga di masa lalu (Mulai Hari Ini ke depan)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const startDateOnly = new Date(start);
   startDateOnly.setHours(0, 0, 0, 0);
+  const endDateOnly = new Date(end);
+  endDateOnly.setHours(0, 0, 0, 0);
 
+  // Validasi Logika Tanggal
+  if (endDateOnly < startDateOnly) {
+    throw new Error("Gagal: Tanggal Selesai tidak boleh lebih awal dari Tanggal Mulai.");
+  }
+
+  // Mencegah pengaturan harga di masa lalu (Mulai Hari Ini ke depan)
   if (startDateOnly < today) {
     throw new Error("Gagal: Anda tidak dapat mengatur harga untuk tanggal yang sudah lewat.");
   }
