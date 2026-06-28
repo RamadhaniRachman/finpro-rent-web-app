@@ -44,7 +44,20 @@ export const calcAdjustedPrice = (
   target: Date,
 ): number => {
   const baseNum = Number(base);
-  const active = modifiers.find((m) => target >= m.start_date && target <= m.end_date);
+  
+  // Normalisasi waktu target (Jam 00:00:00)
+  const targetDate = new Date(target);
+  targetDate.setHours(0, 0, 0, 0);
+
+  const active = modifiers.find((m) => {
+    const start = new Date(m.start_date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(m.end_date);
+    end.setHours(23, 59, 59, 999); // Aktif sampai detik terakhir hari itu
+    
+    return targetDate >= start && targetDate <= end;
+  });
+
   if (!active) return baseNum;
   
   const val = Number(active.modifier_value);

@@ -19,7 +19,11 @@ export const createRoomType = async (userId: string, propertyId: string, data: C
   validateRoomData(data);
 
   const duplicate = await prisma.room_type.findFirst({
-    where: { property_id: propertyId, name: { equals: data.name.trim(), mode: "insensitive" } }
+    where: { 
+      property_id: propertyId, 
+      name: { equals: data.name.trim(), mode: "insensitive" },
+      deleted_at: null
+    }
   });
   if (duplicate) throw new Error(`Room type '${data.name}' already exists.`);
 
@@ -64,7 +68,14 @@ export const updateRoomType = async (userId: string, roomTypeId: string, data: a
   validateRoomData(data);
 
   if (data.name !== undefined) {
-    const dup = await prisma.room_type.findFirst({ where: { property_id: existing.property_id, name: { equals: data.name.trim(), mode: "insensitive" }, id: { not: roomTypeId } } });
+    const dup = await prisma.room_type.findFirst({
+      where: { 
+        property_id: existing.property_id, 
+        name: { equals: data.name.trim(), mode: "insensitive" }, 
+        id: { not: roomTypeId },
+        deleted_at: null
+      }
+    });
     if (dup) throw new Error(`Room type '${data.name}' already exists.`);
   }
 

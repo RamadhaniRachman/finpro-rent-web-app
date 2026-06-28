@@ -7,7 +7,17 @@ export const getStayDates = (checkIn: Date, checkOut: Date) => {
 
 export const calculateNightlyPrice = (basePrice: number, date: Date, modifiers: any[]) => {
   let currentPrice = basePrice;
-  const activeMod = modifiers.find((m) => isWithinInterval(date, { start: m.start_date, end: m.end_date }));
+  const activeMod = modifiers.find((m) => {
+    const targetDate = new Date(date);
+    targetDate.setHours(0, 0, 0, 0);
+    
+    const start = new Date(m.start_date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(m.end_date);
+    end.setHours(23, 59, 59, 999);
+    
+    return targetDate >= start && targetDate <= end;
+  });
 
   if (activeMod) {
     if (!activeMod.is_available) throw new Error(`Kamar tidak tersedia pada ${date.toISOString()}`);
